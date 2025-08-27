@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz Maker — full build (fixed)</title>
+<style>
+  :root{--bg:#f4faff;--card:#fff;--ink:#163046;--muted:#5e7180;--line:#d6e2ea;--accent:#2e7d32}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+  main{max-width:1200px;margin:24px auto;padding:0 16px}
+  h1{display:flex;align-items:center;gap:10px;margin:8px 0 14px}
+  .tabs{display:flex;gap:10px;margin:8px 0 18px}
+  .tabs button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 16px;cursor:pointer}
+  .tab-content{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  label{display:block;margin:10px 0 6px}
+  input[type=text], input[type=number], textarea, select{width:100%;box-sizing:border-box;border:1px solid #c8d7e1;border-radius:10px;padding:10px 12px;font-size:16px}
+  textarea{min-height:80px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+  .btn{padding:10px 14px;border:1px solid #b8c9d6;border-radius:12px;background:#fff;cursor:pointer}
+  .btn-primary{background:var(--accent);border:none;color:#fff}
+  .btn-ghost{background:transparent;border:1px dashed #b9cadd}
+  .muted{color:var(--muted)}
+  .question-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;margin:8px 0;cursor:grab;position:relative}
+  .question-item.dragging{opacity:.7}
+  .question-actions{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+  .banner{padding:10px 12px;border-radius:10px;margin-top:12px}
+  .banner.ok{background:#e8f5e9;color:#1b5e20;border:1px solid #b7e1c0}
+  .banner.err{background:#ffebee;color:#b71c1c;border:1px solid #f3b0b5}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .sort-list{list-style:none;padding:0;margin:0}
+  .sort-list li{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafafa;position:relative}
+  .opt{display:block;width:100%;text-align:left;margin:6px 0}
+  .thumb{max-width:100%;max-height:160px;border-radius:8px;display:block}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
+  .chip[aria-pressed="true"]{background:#e8f5ff;border-color:#b3defc}
+  .dragging-el{opacity:.7}
+  body[data-theme='child'] input,body[data-theme='child'] select,body[data-theme='child'] .btn{font-size:20px;padding:14px;border-radius:18px}
+</style>
+</head>
+<body>
+<main>
+  <h1>📚 Quiz Maker</h1>
+  <div class="tabs">
+    <button id="tab-editor">✏️ Editor</button>
+    <button id="tab-player">▶️ Play</button>
+    <button id="tab-settings">⚙️ Settings</button>
+    <button id="tab-import">📂 Import</button>
+    <button id="tab-export">💾 Export</button>
+  </div>
+
+  <section id="editor" class="tab-content">
+    <h2>Edit Questions</h2>
+
+    <label>Question</label>
+    <input id="questionText" type="text" placeholder="Type your question" />
+    <div class="row" id="qMediaRow">
+      <input type="file" id="qImg" accept="image/*" style="display:none"/>
+      <input type="file" id="qAud" accept="audio/*" style="display:none"/>
+      <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
+      <img id="qImgPrev" class="thumb" style="display:none"/>
+      <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
+      <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
+      <span id="qAudMini" style="display:none"></span>
+      <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+    </div>
+
+    <label>Type</label>
+    <select id="questionType">
+      <option value="single">Single Choice</option>
+      <option value="multiple">Multiple Choice</option>
+      <option value="text">Enter Answer (text)</option>
+      <option value="multitext">Multiple Text Inputs</option>
+      <option value="matching">Matching (drag right)</option>
+      <option value="order">Put in the right order</option>
+    </select>
+
+    <div id="questionOptionsContainer" style="margin-top:10px"></div>
+
+    <label>Comment (optional)</label>
+    <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
+    <div class="row" id="cMediaRow">
+      <input type="file" id="cImg" accept="image/*" style="display:none"/>
+      <input type="file" id="cAud" accept="audio/*" style="display:none"/>
+      <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
+      <img id="cImgPrev" class="thumb" style="display:none"/>
+      <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
+      <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
+      <span id="cAudMini" style="display:none"></span>
+      <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+    </div>
+
+    <label>Category / Topic (optional)</label>
+    <select id="categorySelect"><option value="">— none —</option></select>
+<div id="categoryNewUI" style="display:none;margin-top:8px"></div>
+
+    <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
+
+    <h3 style="margin-top:18px">Saved Questions</h3>
+    <ul id="questionList" style="list-style:none;padding-left:0"></ul>
+
+    <div class="row" style="margin-top:10px">
+      <input type="file" id="importFile" accept="application/json" style="display:none"/>
+      <button id="importBtn" class="btn">📂 Import JSON</button>
+      <button id="exportBtn" class="btn btn-primary">💾 Export JSON</button>
+      <span class="muted">(Media is embedded as data URLs)</span>
+    </div>
+  </section>
+
+  <section id="player" class="tab-content" style="display:none">
+    <h2>Quiz Time</h2>
+    <div id="quizContainer"></div>
+    <div id="quizControls"></div>
+  </section>
+
+  <section id="settings" class="tab-content" style="display:none">
+    <h2>Settings</h2>
+    <label>Theme
+      <select id="themeSelect">
+        <option value="formal">Formal</option>
+        <option value="playful">Playful</option>
+        <option value="child">Child-friendly</option>
+      </select>
+    </label>
+    <label>Language
+      <select id="langSelect">
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </label>
+    <h3>Feedback</h3>
+    <select id="feedbackSelect">
+      <option value="immediate">Immediate</option>
+      <option value="end">At end</option>
+      <option value="score">Score only</option>
+    </select>
+    <label><input type="checkbox" id="showComments" checked> Show comments</label>
+    <h3>Validation</h3>
+    <label><input type="checkbox" id="autoValidate" checked> Validate automatically (default)</label>
+    <h3>Random mode</h3>
+    <label><input type="checkbox" id="randomMode"> Randomize questions</label>
+    <label>Number of questions <input type="number" id="randomCount" min="1"></label>
+    <h3>Time Limit</h3>
+    <label>Time (seconds) <input type="number" id="timeLimitSec" min="0"></label>
+    <h3>Text Matching</h3>
+    <label><input type="checkbox" id="caseSensitive"> Case sensitive</label>
+    <label><input type="checkbox" id="ignorePunct" checked> Ignore punctuation</label>
+    <label><input type="checkbox" id="normalizeAccents" checked> Normalize accents</label>
+    <label><input type="checkbox" id="ignoreSpaces" checked> Collapse spaces</label>
+    <label><input type="checkbox" id="regexFull" checked> Full regex match (^...$)</label>
+    <h3>Multiple Choice Scoring</h3>
+    <select id="mcqScore">
+      <option value="all">All-or-nothing</option>
+      <option value="partial">Partial credit</option>
+      <option value="partial_penalty">Partial with penalty</option>
+    </select>
+    <h3>Speech</h3>
+    <label><input type="checkbox" id="autoTTSQuestions"> Auto-TTS questions</label>
+    <label><input type="checkbox" id="autoTTSItems"> Auto-TTS items/options</label>
+
+    <h3>Immediate feedback detail</h3>
+    <label><input type="checkbox" id="showCorrectImmediate" checked> Show correct answer when wrong (immediate)</label>
+
+    <h3>Categories / Topics / Mottos</h3>
+    <div id="catsManager"></div>
+
+    <button id="saveSettings" class="btn btn-primary">Save settings</button>
+    <span id="settingsSaved" style="display:none;margin-left:8px">Saved ✓</span>
+  </section>
+</main>
+
+<script>
+// ===== State =====
+let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
+let meta = Object.assign({categories:[]}, JSON.parse(localStorage.getItem('quizMeta')||'{}'));
+let settings = Object.assign({
+  feedback:'immediate', showComments:true, theme:'formal', lang:'en',
+  random:false, randomCount:5, timeLimitSec:0,
+  caseSensitive:false, ignorePunct:true, normalizeAccents:true, ignoreSpaces:true, regexFull:true,
+  mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
+  showCorrectImmediate:true
+}, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
+let editingIndex = -1; // -1 means create new
+function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(settings)); }
+
+// ===== Helpers =====
+function el(tag, props={}, ...kids){ const n=document.createElement(tag); Object.assign(n, props); kids.forEach(k=> n.append(k?.nodeType? k : (k??''))); return n; }
+function shuffle(a){ return a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
+function normalizeText(s){
+  let out = String(s ?? '');
+  // Strip common combining marks without regex property escapes
+  if(settings.normalizeAccents){
+    try{
+      out = out.normalize('NFD');
+      let cleaned = '';
+      for(const ch of out){
+        const cp = ch.codePointAt(0);
+        const isComb = (cp>=0x0300 && cp<=0x036F) || (cp>=0x1AB0 && cp<=0x1AFF) || (cp>=0x1DC0 && cp<=0x1DFF) || (cp>=0x20D0 && cp<=0x20FF) || (cp>=0xFE20 && cp<=0xFE2F);
+        if(!isComb) cleaned += ch;
+      }
+      out = cleaned;
+    }catch(e){}
+  }
+  // Remove punctuation/symbols: keep letters, digits, and whitespace
+  if(settings.ignorePunct){
+    let kept = '';
+    for(const ch of out){
+      const isLetter = (ch.toLowerCase() !== ch.toUpperCase());
+      const isDigit = (ch >= '0' && ch <= '9');
+      const isSpace = (ch.trim() === '');
+      if(isLetter || isDigit || isSpace) kept += ch;
+    }
+    out = kept;
+  }
+  // Collapse spaces without regex
+  if(settings.ignoreSpaces){
+    let buf='', prevSpace=false;
+    for(const ch of out){
+      if(ch.trim()===''){
+        if(!prevSpace){ buf += ' '; prevSpace=true; }
+      } else { buf += ch; prevSpace=false; }
+    }
+    out = buf.trim();
+  }
+  if(!settings.caseSensitive){ out = out.toLowerCase(); }
+  return out;
+}
+const fileToDataURL=f=>new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);});
+function miniAudio(url,label='Play'){ const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','false'); b.textContent='🔈 '+label; const a=new Audio(url); b.onclick=()=>{ if(b.getAttribute('aria-pressed')==='true'){ a.pause(); a.currentTime=0; b.setAttribute('aria-pressed','false'); } else { a.play().catch(()=>{}); b.setAttribute('aria-pressed','true'); a.onended=()=>b.setAttribute('aria-pressed','false'); } }; return b; }
+
+// ===== Media pickers (question/comment) =====
+let qImgData='', qAudData='', cImgData='', cAudData='';
+const qImg=document.getElementById('qImg'), qImgPick=document.getElementById('qImgPick'), qImgPrev=document.getElementById('qImgPrev'), qImgClear=document.getElementById('qImgClear');
+qImgPick.onclick=()=>qImg.click();
+qImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qImgData=await fileToDataURL(f); qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; };
+qImgClear.onclick=()=>{ qImg.value=''; qImgData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; };
+const qAud=document.getElementById('qAud'), qAudPick=document.getElementById('qAudPick'), qAudMini=document.getElementById('qAudMini'), qAudClear=document.getElementById('qAudClear');
+qAudPick.onclick=()=>qAud.click();
+qAud.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qAudData=await fileToDataURL(f); qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; };
+qAudClear.onclick=()=>{ qAud.value=''; qAudData=''; qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; };
+const cImg=document.getElementById('cImg'), cImgPick=document.getElementById('cImgPick'), cImgPrev=document.getElementById('cImgPrev'), cImgClear=document.getElementById('cImgClear');
+cImgPick.onclick=()=>cImg.click();
+cImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cImgData=await fileToDataURL(f); cImgPrev.src=cImgData; cImgPrev.style.display='block'; cImgClear.style.display='inline-block'; };
+cImgClear.onclick=()=>{ cImg.value=''; cImgData=''; cImgPrev.style.display='none'; cImgClear.style.display='none'; };
+const cAud=document.getElementById('cAud'), cAudPick=document.getElementById('cAudPick'), cAudMini=document.getElementById('cAudMini'), cAudClear=document.getElementById('cAudClear');
+cAudPick.onclick=()=>cAud.click();
+cAud.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cAudData=await fileToDataURL(f); cAudMini.innerHTML=''; cAudMini.appendChild(miniAudio(cAudData,'Audio')); cAudMini.style.display='inline-flex'; cAudClear.style.display='inline-block'; };
+cAudClear.onclick=()=>{ cAud.value=''; cAudData=''; cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; };
+
+// ===== Editor renderers =====
+const optHost = document.getElementById('questionOptionsContainer');
+const qTypeSel = document.getElementById('questionType');
+
+function renderCategorySelect(selectedId){
+  const sel = el('select',{className:'form-select'});
+
+  // option: none
+  sel.appendChild(el('option',{value:''}, '(no category)'));
+
+  // option: new
+  sel.appendChild(el('option',{value:'__new__'}, '➕ New...'));
+
+  // existing categories from quiz.categories
+  const cats = quiz.categories || {};
+  Object.keys(cats).forEach(id=>{
+    sel.appendChild(el('option',{value:id, selected:(id===selectedId)}, cats[id]));
+  });
+
+  // handle "new" creation
+  sel.onchange = ()=>{
+    if(sel.value==='__new__'){
+      const label = prompt('Enter new category/topic name:');
+      if(label && label.trim()){
+        const newId = 'cat'+Date.now();
+        if(!quiz.categories) quiz.categories={};
+        quiz.categories[newId]=label.trim();
+        // replace current select with updated version
+        const newSel = renderCategorySelect(newId);
+        sel.replaceWith(newSel);
+      } else {
+        sel.value='';
+      }
+    }
+  };
+
+  return sel;
+}
+
+// Small helpers
+function mediaPickers(hostRow, init={}){
+  const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
+  const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
+  const iBtn=el('button',{className:'chip',type:'button'},'🖼️');
+  const aBtn=el('button',{className:'chip',type:'button'},'🔈');
+  const prev=el('span',{});
+  if(init.image){ prev.appendChild(el('img',{src:init.image,className:'thumb'})); hostRow.dataset.img=init.image; }
+  if(init.audio){ prev.appendChild(miniAudio(init.audio,'Audio')); hostRow.dataset.aud=init.audio; }
+  iBtn.onclick=()=>iFile.click();
+  aBtn.onclick=()=>aFile.click();
+  iFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); hostRow.dataset.img=d; const old=prev.querySelector('img'); if(old) old.remove(); prev.prepend(el('img',{src:d,className:'thumb'})); };
+  aFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); hostRow.dataset.aud=d; const old=prev.querySelector('.chip'); if(old) old.remove(); prev.appendChild(miniAudio(d,'Audio')); };
+  return [iBtn,aBtn,iFile,aFile,prev];
+}
+
+function answerRow(type, valueObj={}, idx, data){
+  const row=el('div',{className:'row arow'});
+  const correct=el('input',{type:type==='single'?'radio':'checkbox', name:'correct'});
+  if(type==='single' && idx===(data.correct|0)) correct.checked=true;
+  if(type==='multiple' && Array.isArray(data.corrects) && data.corrects.includes(idx)) correct.checked=true;
+  const txt=el('input',{type:'text',placeholder:`Answer ${idx+1}`,value:valueObj.text||''});
+  const hint=el('input',{type:'text',placeholder:'Hint (optional)',value:valueObj.hint||''});
+  const mediaRow=el('span',{}); mediaPickers(mediaRow,{image:valueObj.image||'',audio:valueObj.audio||''}).forEach(n=>mediaRow.appendChild(n));
+  const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
+  row.append(correct,txt,hint,mediaRow,del);
+  return row;
+}
+function textRow(value){ const obj=(typeof value==='object'&&value)?value:{text:value||'',hint:''}; const r=el('div',{className:'row'}); const i=el('input',{type:'text',value:obj.text||'',placeholder:'Text'}); const h=el('input',{type:'text',value:obj.hint||'',placeholder:'Hint (optional)'}); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(i,h,d); return r; }
+function pairRow(p){ const r=el('div',{className:'row pair'});
+  // LEFT
+  const left=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
+  const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
+  const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
+  const lMedia=el('span',{}); mediaPickers(lMedia,{image:p.left?.image||'',audio:p.left?.audio||''}).forEach(n=>lMedia.appendChild(n));
+  left.append(el('label',{},'Left'),lText,lHint,lMedia);
+  // RIGHT
+  const right=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
+  const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
+  const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
+  const rMedia=el('span',{}); mediaPickers(rMedia,{image:p.right?.image||'',audio:p.right?.audio||''}).forEach(n=>rMedia.appendChild(n));
+  right.append(el('label',{},'Right'),rText,rHint,rMedia);
+  const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+  r.append(left,right,del);
+  return r;
+}
+function orderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const m=el('span',{}); mediaPickers(m,{image:o.image||'',audio:o.audio||''}).forEach(n=>m.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,m,d); return r; }
+
+function renderOptionsEditor(data={}){
+  if(!optHost||!qTypeSel) return; optHost.innerHTML='';
+  const type=qTypeSel.value;
+  if(type==='single' || type==='multiple'){
+    const list=el('div',{id:'answersList'});
+    const src=(data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
+    src.forEach((ans,i)=> list.appendChild(answerRow(type, ans, i, data)) );
+    const addBtn=el('button',{className:'btn',onclick:()=> list.appendChild(answerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
+    optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
+  }
+  if(type==='text'){
+    const list=el('div',{id:'txtAccept'});
+    const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
+    src.forEach(v=> list.appendChild(textRow(v)) );
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, '➕ Add acceptable');
+    optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
+  }
+  if(type==='multitext'){
+    const list=el('div',{id:'multiPrompts'});
+    (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(textRow(lbl)) );
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, '➕ Add field');
+    optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
+  }
+  if(type==='matching'){
+    const wrap=el('div',{id:'pairsWrap'});
+    (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(pairRow(p)) );
+    const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(pairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+    optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT.'), wrap, add);
+  }
+  if(type==='order'){
+    const list=el('div',{id:'orderList'});
+    (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(orderRow(it)) );
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(orderRow({text:''}))}, '➕ Add item');
+    optHost.append(el('div',{className:'muted'},'Correct order is the list order here.'), list, add);
+  }
+}
+
+qTypeSel.addEventListener('change', ()=>renderOptionsEditor());
+renderOptionsEditor();
+
+// Gather editor data
+function collectQuestion(){
+  const type=qTypeSel.value; const question=document.getElementById('questionText').value.trim();
+  const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||''}, comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||''}};
+  const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
+  if(type==='single' || type==='multiple'){
+    const rows=[...optHost.querySelectorAll('#answersList .arow')];
+    const answers=rows.map(r=>({text:r.querySelector('input[type="text"]').value.trim(), image:r.dataset.img||'', audio:r.dataset.aud||''})).filter(a=>a.text||a.image||a.audio);
+    if(type==='single'){ const idx=rows.findIndex(r=> r.querySelector('input[type="radio"]').checked); Object.assign(q,{answers,correct:idx}); }
+    else { const corrects=rows.map((r,i)=> r.querySelector('input[type="checkbox"]').checked? i : -1).filter(i=>i!==-1); Object.assign(q,{answers,corrects}); }
+  }
+  if(type==='text'){ q.acceptable=[...optHost.querySelectorAll('#txtAccept input[type="text"]')].map(i=>i.value.trim()).filter(Boolean); }
+  if(type==='multitext'){ q.prompts=[...optHost.querySelectorAll('#multiPrompts input[type="text"]')].map(i=>i.value.trim()).filter(Boolean); }
+  if(type==='matching'){
+    q.pairs=[...optHost.querySelectorAll('#pairsWrap .pair')].map(row=>{
+      const leftWrap=row.children[0];
+      const rightWrap=row.children[1];
+      const lText=leftWrap.querySelector('input[type="text"]').value.trim();
+      const lMedia=leftWrap.querySelector('.row');
+      const rText=rightWrap.querySelector('input[type="text"]').value.trim();
+      const rMedia=rightWrap.querySelector('.row');
+      return {
+        left:{text:lText, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||''},
+        right:{text:rText, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||''}
+      };
+    }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.right.text||p.right.image||p.right.audio));
+  }
+  if(type==='order'){
+    q.sequence=[...optHost.querySelectorAll('#orderList .order-row')].map(r=>{
+      const t=r.querySelector('input[type="text"]').value.trim();
+      const m=r.querySelector('.row');
+      return { text:t, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'' };
+    }).filter(it=> it.text||it.image||it.audio);
+  }
+  return q;
+}
+
+// Load into editor (incl. media)
+function loadIntoEditor(q){
+  document.getElementById('questionText').value=q.question||'';
+  qImgData=q.questionMedia?.image||''; qAudData=q.questionMedia?.audio||''; cImgData=q.commentMedia?.image||''; cAudData=q.commentMedia?.audio||'';
+  if(qImgData){ qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; } else { qImgPrev.style.display='none'; qImgClear.style.display='none'; }
+  if(qAudData){ qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; } else { qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; }
+  if(cImgData){ cImgPrev.src=cImgData; cImgPrev.style.display='block'; cImgClear.style.display='inline-block'; } else { cImgPrev.style.display='none'; cImgClear.style.display='none'; }
+  if(cAudData){ cAudMini.innerHTML=''; cAudMini.appendChild(miniAudio(cAudData,'Audio')); cAudMini.style.display='inline-flex'; cAudClear.style.display='inline-block'; } else { cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; }
+  qTypeSel.value=q.type||'single'; renderOptionsEditor(q);
+  renderCategorySelect(); if(q.categoryId){ const sel=document.getElementById('categorySelect'); if(sel) sel.value=q.categoryId; }
+}
+
+// Save / list
+function renderQuestionList(){
+  const ul=document.getElementById('questionList'); ul.innerHTML='';
+  questions.forEach((q,i)=>{
+    const li=el('li',{className:'question-item'}, q.question||'(untitled)');
+    const actions=el('div',{className:'question-actions'});
+    const edit=el('button',{},'✏️'); edit.onclick=()=>{ editingIndex=i; loadIntoEditor(q); };
+    const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
+    actions.append(edit,del); li.append(actions); ul.append(li);
+  });
+  // drag reorder
+  [...ul.querySelectorAll('.question-item')].forEach(li=>{
+    li.draggable=true;
+    li.addEventListener('dragstart',e=>{ li.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    li.addEventListener('dragend',e=>{ li.classList.remove('dragging'); saveReorder(); });
+    li.addEventListener('dragover',e=>{ e.preventDefault(); const t=e.currentTarget; const d=document.querySelector('.dragging'); if(d&&t!==d){ const r=t.getBoundingClientRect(); const after=(e.clientY-r.top)/r.height>0.5; t.parentNode.insertBefore(d, after?t.nextSibling:t); }});
+  });
+}
+renderQuestionList();
+
+document.getElementById('saveQuestion').onclick=()=>{
+  const qtext=document.getElementById('questionText').value.trim(); if(!qtext) { alert('Enter a question'); return; }
+  const q=collectQuestion();
+  if(q.type==='single'&& (q.correct==null||q.correct<0)) { alert('Mark the correct answer'); return; }
+  if(q.type==='multiple'&& (!q.corrects||!q.corrects.length)) { alert('Mark at least one correct'); return; }
+  if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert('Add at least one acceptable'); return; }
+  if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert('Add at least one pair'); return; }
+  if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert('Add at least two items'); return; }
+  q.comment=document.getElementById('questionComment').value.trim();
+  if(editingIndex>=0){ questions[editingIndex]=q; editingIndex=-1; }
+  else questions.push(q);
+  localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList();
+  document.getElementById('questionText').value=''; document.getElementById('questionComment').value=''; qImgData=qAudData=cImgData=cAudData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; cImgPrev.style.display='none'; cImgClear.style.display='none'; cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; renderOptionsEditor();
+};
+
+function saveReorder(){ const ul=document.getElementById('questionList'); const titles=[...ul.children].map(li=>li.childNodes[0].nodeValue.trim()); const map=titles.map(t=> questions.find(q=>q.question===t)); questions=map; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); }
+
+// ===== Settings =====
+function applySettingsToUI(){
+  document.getElementById('feedbackSelect').value=settings.feedback; document.getElementById('showComments').checked=settings.showComments; document.getElementById('autoValidate').checked=settings.autoValidate;
+  document.getElementById('themeSelect').value=settings.theme; document.body.setAttribute('data-theme', settings.theme);
+  document.getElementById('langSelect').value=settings.lang;
+  document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
+  document.getElementById('caseSensitive').checked=settings.caseSensitive; document.getElementById('ignorePunct').checked=settings.ignorePunct; document.getElementById('normalizeAccents').checked=settings.normalizeAccents; document.getElementById('ignoreSpaces').checked=settings.ignoreSpaces; document.getElementById('regexFull').checked=settings.regexFull; document.getElementById('mcqScore').value=settings.mcqScore; document.getElementById('autoTTSQuestions').checked=settings.autoTTSQuestions; document.getElementById('autoTTSItems').checked=settings.autoTTSItems; document.getElementById('showCorrectImmediate').checked=settings.showCorrectImmediate;
+  renderCategorySelect();
+  renderCategoriesManager();
+}
+applySettingsToUI();
+
+document.getElementById('saveSettings').onclick=()=>{ 
+  settings.feedback=document.getElementById('feedbackSelect').value; 
+  settings.showComments=document.getElementById('showComments').checked; 
+  settings.autoValidate=document.getElementById('autoValidate').checked; 
+  settings.theme=document.getElementById('themeSelect').value; 
+  document.body.setAttribute('data-theme', settings.theme); 
+  settings.lang=document.getElementById('langSelect').value; 
+  settings.random=document.getElementById('randomMode').checked; 
+  settings.randomCount=parseInt(document.getElementById('randomCount').value||'0'); 
+  settings.timeLimitSec=parseInt(document.getElementById('timeLimitSec').value||'0'); 
+  settings.caseSensitive=document.getElementById('caseSensitive').checked; 
+  settings.ignorePunct=document.getElementById('ignorePunct').checked; 
+  settings.normalizeAccents=document.getElementById('normalizeAccents').checked; 
+  settings.ignoreSpaces=document.getElementById('ignoreSpaces').checked; 
+  settings.regexFull=document.getElementById('regexFull').checked; 
+  settings.mcqScore=document.getElementById('mcqScore').value; 
+  settings.autoTTSQuestions=document.getElementById('autoTTSQuestions').checked; 
+  settings.autoTTSItems=document.getElementById('autoTTSItems').checked; 
+  settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
+  saveSettings();
+  const s=document.getElementById('settingsSaved');
+  s.style.display='inline';
+  setTimeout(()=>s.style.display='none',1200);
+};
+
+// ===== Import / Export =====
+const impFile=document.getElementById('importFile');
+document.getElementById('importBtn').onclick=()=> impFile.click();
+document.getElementById('exportBtn').onclick=()=> doExport();
+// Also wire tab buttons to act immediately
+const tabImp=document.getElementById('tab-import'); if(tabImp) tabImp.onclick=()=> impFile.click();
+const tabExp=document.getElementById('tab-export'); if(tabExp) tabExp.onclick=()=> doExport();
+
+function doExport(){ const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='quiz.json'; a.click(); }
+
+impFile.onchange=(ev)=>{
+  const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=e=>{
+    try{
+      let data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('Top-level must be an array');
+      // normalize: strings -> {text}, order/matching shapes
+      data=data.map(q=>{
+        const out=Object.assign({}, q);
+        if(out.type==='order' && Array.isArray(out.sequence)){
+          out.sequence=out.sequence.map(x=> (typeof x==='string'? {text:x} : x));
+        }
+        if(out.type==='matching' && Array.isArray(out.pairs)){
+          out.pairs=out.pairs.map(p=>({
+            left: (typeof p.left==='string'? {text:p.left} : p.left||{text:''}),
+            right:(typeof p.right==='string'? {text:p.right}: p.right||{text:''})
+          }));
+        }
+        if(out.type==='single' || out.type==='multiple'){
+          out.answers=(out.answers||[]).map(a=> typeof a==='string'? {text:a}: a);
+        }
+        return out;
+      });
+      questions=data; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); alert('Imported ✓');
+    }catch(err){ alert('Import failed: '+err.message); }
+  };
+  r.readAsText(f);
+};
+
+// ===== Tabs =====
+function showTab(id){ ['editor','player','settings'].forEach(x=>document.getElementById(x).style.display=x===id?'block':'none'); }
+
+document.getElementById('tab-editor').onclick=()=>{ showTab('editor'); renderQuestionList(); };
+document.getElementById('tab-player').onclick=()=>{ showTab('player'); startQuiz(); };
+document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
+
+// ===== Import/Export override to include categories =====
+(function(){
+  const impFile=document.getElementById('importFile');
+  const importBtn=document.getElementById('importBtn');
+  const exportBtn=document.getElementById('exportBtn');
+  if(importBtn){ importBtn.onclick=()=> impFile.click(); }
+  if(impFile){ impFile.onchange=(ev)=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ try{ const data=JSON.parse(e.target.result);
+    if(Array.isArray(data)) { questions=data; }
+    else if(data && Array.isArray(data.questions)) { questions=data.questions; meta.categories = Array.isArray(data.categories)? data.categories : (data.meta&&Array.isArray(data.meta.categories)? data.meta.categories : meta.categories); }
+    else throw new Error('Invalid JSON');
+    localStorage.setItem('quizData', JSON.stringify(questions)); localStorage.setItem('quizMeta', JSON.stringify(meta));
+    renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ✓'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
+  }
+  if(exportBtn){ exportBtn.onclick=()=>{ const payload={ categories: meta.categories, questions }; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='quiz.json'; a.click(); }; }
+})();
+
+// ===== Speech =====
+function maybeSpeakItemText(text, target){ if(settings.autoTTSItems && text){ if(target && target.closest('.chip')) return; speak(text); } }
+
+// ===== Player =====
+let __playState={pool:[],idx:0,correct:0};
+
+function startQuiz(){
+  const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  qc.innerHTML=''; qctrl.innerHTML='';
+  if(!questions.length){ qc.innerHTML='<p class="muted">No questions yet.</p>'; return; }
+  __playState.pool = settings.random? shuffle(questions).slice(0, Math.max(1, settings.randomCount||questions.length)) : questions.slice();
+  __playState.idx=0; __playState.correct=0;
+  if(settings.timeLimitSec>0){ let remaining=settings.timeLimitSec; const t=el('div',{id:'timer'}, '⏱ '+remaining); qc.prepend(t); const id=setInterval(()=>{ remaining--; const elT=document.getElementById('timer'); if(elT) elT.textContent='⏱ '+remaining; if(remaining<=0){ clearInterval(id); finalize(); } },1000); }
+  showCurrent();
+}
+
+function showCurrent(){
+  const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  qc.innerHTML=''; qctrl.innerHTML='';
+  const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
+  const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
+  if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
+  if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
+
+  if(q.type==='single') renderPlaySingle(q, qc, qctrl);
+  else if(q.type==='multiple') renderPlayMultiple(q, qc, qctrl);
+  else if(q.type==='text') renderPlayText(q, qc, qctrl);
+  else if(q.type==='matching') renderPlayMatching(q, qc, qctrl);
+  else if(q.type==='order') renderPlayOrder(q, qc, qctrl);
+  else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
+}
+
+function proceed(ok, q){
+  const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  if(settings.feedback==='immediate'){
+    const b=el('div',{className:'banner '+(ok?'ok':'err')}, ok? 'Correct' : 'Wrong');
+    if(!ok && settings.showCorrectImmediate){
+      const corr=describeCorrect(q);
+      if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
+    }
+    if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}, q.comment); if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);} 
+    qc.appendChild(b); qctrl.innerHTML=''; qctrl.appendChild(el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'));
+  } else { nextQuestion(); }
+  if(ok) __playState.correct++;
+}
+
+function nextQuestion(){ __playState.idx++; if(__playState.idx>=__playState.pool.length) finalize(); else showCurrent(); }
+function finalize(){ const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls'); qc.innerHTML=''; qctrl.innerHTML=''; qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`)); }
+
+// Media-aware renderer for items
+function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??''); const img=(item?.image||''); const aud=(item?.audio||''); if(img) box.appendChild(el('img',{src:img,className:'thumb'})); if(text) box.appendChild(el('div',{}, text)); if(aud) box.appendChild(miniAudio(aud,'Play')); box.addEventListener('click',ev=> maybeSpeakItemText(text, ev.target)); return box; }
+
+// ===== Helpers for feedback =====
+function describeCorrect(q){
+  try{
+    if(q.type==='single'){
+      const a=q.answers?.[q.correct]; if(!a) return ''; return 'Correct answer: '+(a.text||'(media)');
+    }
+    if(q.type==='multiple'){
+      const idxs=q.corrects||[]; const texts=idxs.map(i=> q.answers?.[i]?.text||'(media)').filter(Boolean); return 'Correct answers: '+texts.join(', ');
+    }
+    if(q.type==='text'){
+      const acc=q.acceptable||[]; return acc.length? ('Acceptable: '+acc.join(', ')) : '';
+    }
+    if(q.type==='matching'){
+      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return 'Pairs: '+lines.join(' | ');
+    }
+    if(q.type==='order'){
+      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return 'Order: '+t.join(' → ');
+    }
+    if(q.type==='multitext'){
+      return '';
+    }
+  }catch(e){ return ''; }
+}
+
+// ===== Play renderers + validation =====
+function renderPlaySingle(q, qc, qctrl){
+  q.answers = (q.answers||[]);
+  q.answers.forEach((a,i)=>{
+    const b = el('button',{className:'btn opt'});
+    const box = el('div',{});
+    if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
+    if(a.text) box.appendChild(el('div',{}, a.text));
+    if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
+    if(a.hint){
+      const hintBtn = el('button',{className:'chip',type:'button'},'💡');
+      const hintText = el('span',{className:'muted',style:'display:none;margin-left:6px'}, a.hint);
+      hintBtn.onclick = ()=>{ hintText.style.display = (hintText.style.display==='none'?'inline':'none'); };
+      box.appendChild(hintBtn);
+      box.appendChild(hintText);
+    }
+    b.appendChild(box);
+    b.onclick = ()=>{
+      if(settings.autoValidate){ proceed(i===q.correct, q); }
+      else { markSubmit(()=> i===q.correct, qctrl, q); }
+      if(settings.autoTTSItems && a.text) speak(a.text);
+    };
+    qc.appendChild(b);
+  });
+}
+
+function renderPlayMultiple(q, qc, qctrl){
+  q.answers=(q.answers||[]);
+  const checks=q.answers.map((a,i)=>{
+    const row=el('div',{});
+    const chk=el('input',{type:'checkbox'});
+    const label=el('span',{}, ' ', a.text||'');
+    row.append(chk,label);
+    if(a.image) row.appendChild(el('img',{src:a.image,className:'thumb'}));
+    if(a.audio) row.appendChild(miniAudio(a.audio,'Play'));
+    if(a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
+    if(settings.autoTTSItems && a.text) row.onclick=()=>speak(a.text);
+    qc.appendChild(row);
+    return chk;
+  });
+  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  s.onclick=()=>{
+    const chosen=checks.map((c,i)=>c.checked?i:-1).filter(i=>i!==-1);
+    const corrects=(q.corrects||[]).slice();
+    let ok=false;
+    if(settings.mcqScore==='all'){
+      ok = (chosen.slice().sort().join(',')===corrects.slice().sort().join(','));
+    } else {
+      const total=Math.max(1,corrects.length);
+      const got=chosen.filter(i=>corrects.includes(i)).length;
+      const wrong=chosen.filter(i=>!corrects.includes(i)).length;
+      let score=got/total;
+      if(settings.mcqScore==='partial_penalty') score=Math.max(0,score - wrong/total);
+      ok=score>=0.999;
+    }
+    proceed(ok,q);
+  };
+  qctrl.appendChild(s);
+}
+
+function renderPlayText(q, qc, qctrl){
+  const inp = el('input',{type:'text',placeholder:'Your answer'});
+  qc.appendChild(inp);
+
+  const acceptable = (q.acceptable||[]).map(a => typeof a==='string' ? {text:a, hint:''} : a);
+  const hintAll = acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
+  if(hintAll){
+    const hBtn = el('button',{className:'chip',type:'button'},'💡');
+    const hTxt = el('span',{className:'muted',style:'display:none;margin-left:6px'}, hintAll);
+    hBtn.onclick = ()=>{ hTxt.style.display = hTxt.style.display==='none' ? 'inline' : 'none'; };
+    qc.append(hBtn,hTxt);
+  }
+
+  const check = ()=>{ const u = normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
+  const s = el('button',{className:'btn btn-primary'}, 'Submit');
+  s.onclick = ()=> proceed(check(), q);
+  qctrl.appendChild(s);
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ proceed(check(), q); }});
+}
+
+function renderPlayMatching(q, qc, qctrl){
+  const pairs = Array.isArray(q.pairs)? q.pairs : [];
+  const leftObjs = pairs.map(p=> (typeof p.left==='object'? p.left : {text:p.left||''}));
+  const rightObjs = pairs.map((p,i)=> { const ro=(typeof p.right==='object'? p.right : {text:p.right||''}); return Object.assign({key:String(i)}, ro); });
+  const sh = shuffle(rightObjs.slice());
+
+  const grid = el('div',{className:'grid2'});
+  const leftCol = el('div',{});
+  const rightCol = el('ul',{className:'sort-list'});
+
+  leftObjs.forEach(obj=>{
+    const card=el('div',{className:'question-item',style:'cursor:default'});
+    if(obj.image) card.appendChild(el('img',{src:obj.image,className:'thumb'}));
+    if(obj.text) card.appendChild(el('div',{},obj.text));
+    if(obj.audio) card.appendChild(miniAudio(obj.audio,'Play'));
+    if(obj.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; card.append(hb,ht); }
+    leftCol.appendChild(card);
+  });
+
+  sh.forEach(it=>{
+    const li=el('li',{}); li.dataset.key=it.key;
+    if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'}));
+    if(it.text) li.appendChild(el('div',{},it.text));
+    if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
+    if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); }
+    li.draggable=true; addDragHandlers(li,rightCol); rightCol.appendChild(li);
+    if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
+  });
+
+  grid.append(leftCol,rightCol); qc.appendChild(grid);
+  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
+  qctrl.appendChild(s);
+}
+
+function renderPlayOrder(q, qc, qctrl){
+  const items=(q.sequence||[]).map((t,i)=> typeof t==='object'? Object.assign({key:String(i)},t) : {text:String(t||''), key:String(i)});
+  const sh=shuffle(items.slice());
+  const list=el('ul',{className:'sort-list'});
+  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
+  qc.appendChild(list);
+  const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
+}
+
+function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; (q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).forEach(lbl=>{ qc.append(el('label',{},lbl), el('input',{type:'text'})); inputs.push(qc.lastChild); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); }
+function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
+
+// Drag helpers
+function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.classList.add('dragging-el'); e.dataTransfer.effectAllowed='move'; }); li.addEventListener('dragend',()=> li.classList.remove('dragging-el')); li.addEventListener('dragover',e=>{ e.preventDefault(); const dragging=list.querySelector('.dragging-el'); if(!dragging||dragging===li) return; const rect=li.getBoundingClientRect(); const after=(e.clientY-rect.top)>rect.height/2; list.insertBefore(dragging, after? li.nextSibling : li); }); }
+// --- Overrides: editor with hint fields, collection, and text play ---
+(function(){
+  if(!window.el) return;
+  const optHostRef = document.getElementById('questionOptionsContainer');
+  const qTypeSelRef = document.getElementById('questionType');
+  function buildAnswerRow(type, valueObj={}, idx, data){
+    const row=el('div',{className:'row arow'});
+    const correct=el('input',{type:type==='single'?'radio':'checkbox', name:'correct'});
+    if(type==='single' && idx===(data.correct|0)) correct.checked=true;
+    if(type==='multiple' && Array.isArray(data.corrects) && data.corrects.includes(idx)) correct.checked=true;
+    const txt=el('input',{type:'text',placeholder:`Answer ${idx+1}`,value:valueObj.text||''});
+    const hint=el('input',{type:'text',placeholder:'Hint (optional)',value:valueObj.hint||'',dataset:{role:'hint'}});
+    const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
+    const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
+    const iBtn=el('button',{className:'chip',type:'button'},'🖼️'); iBtn.onclick=()=>iFile.click();
+    const aBtn=el('button',{className:'chip',type:'button'},'🔈'); aBtn.onclick=()=>aFile.click();
+    const preview=el('span',{});
+    if(valueObj.image){ preview.appendChild(el('img',{src:valueObj.image,className:'thumb'})); row.dataset.img=valueObj.image; }
+    if(valueObj.audio){ preview.appendChild(miniAudio(valueObj.audio,'Audio')); row.dataset.aud=valueObj.audio; }
+    iFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.img=d; const old=preview.querySelector('img'); if(old) old.remove(); preview.prepend(el('img',{src:d,className:'thumb'})); };
+    aFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.aud=d; const old=preview.querySelector('.chip'); if(old) old.remove(); preview.appendChild(miniAudio(d,'Audio')); };
+    const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
+    row.append(correct,txt,hint,iBtn,aBtn,iFile,aFile,preview,del);
+    return row;
+  }
+  function buildTextRow(obj){ const o=(typeof obj==='object'&&obj)?obj:{text:obj||'',hint:''}; const r=el('div',{className:'row'}); const i=el('input',{type:'text',value:o.text||'',placeholder:'Text'}); const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(i,h,d); return r; }
+  function buildPairRow(p){ const r=el('div',{className:'row pair'});
+    const leftWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
+    const lLabel=el('label',{},'Left');
+    const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
+    const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
+    const leftRow=el('div',{className:'row'}); leftRow.dataset.img=p.left?.image||''; leftRow.dataset.aud=p.left?.audio||'';
+    mediaPickers(leftRow,{image:p.left?.image||'',audio:p.left?.audio||''}).forEach(n=>leftRow.appendChild(n)); leftWrap.append(lLabel,lText,lHint,leftRow);
+    const rightWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
+    const rLabel=el('label',{},'Right');
+    const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
+    const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
+    const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||'';
+    mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rLabel,rText,rHint,rightRow);
+    const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(leftWrap,rightWrap,del); return r; }
+  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
+
+  function renderOptionsEditor_v2(data={}){
+    const optHost=optHostRef; if(!optHost||!qTypeSelRef) return; optHost.innerHTML='';
+    const type=qTypeSelRef.value;
+    if(type==='single' || type==='multiple'){
+      const list=el('div',{id:'answersList'});
+      const src = (data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
+      src.forEach((ans,i)=> list.appendChild(buildAnswerRow(type, ans, i, data)) );
+      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
+      optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
+    }
+    if(type==='text'){
+      const list=el('div',{id:'txtAccept'});
+      const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
+      src.forEach(v=> list.appendChild(buildTextRow(v)) );
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
+      optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
+    }
+    if(type==='multitext'){
+      const list=el('div',{id:'multiPrompts'});
+      (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(buildTextRow(lbl)));
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add field');
+      optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
+    }
+    if(type==='matching'){
+      const wrap=el('div',{id:'pairsWrap'});
+      (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(buildPairRow(p)));
+      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+      optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT. Each side can have text, image, audio, and an optional hint.'), wrap, add);
+    }
+    if(type==='order'){
+      const list=el('div',{id:'orderList'});
+      (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(buildOrderRow(it)) );
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
+      optHost.append(el('div',{className:'muted'},'The correct order is the editor order. Items can include text, image, audio, and an optional hint.'), list, add);
+    }
+  }
+  window.renderOptionsEditor = renderOptionsEditor_v2;
+  if(qTypeSelRef){ qTypeSelRef.onchange = ()=>window.renderOptionsEditor(); }
+  if(optHostRef){ window.renderOptionsEditor(); }
+
+  // Override collectQuestion to include hints
+  window.collectQuestion = function(){
+    const type=qTypeSelRef.value; const question=document.getElementById('questionText').value.trim();
+    const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||''}, comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||''}};
+    const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
+    if(type==='single' || type==='multiple'){
+      const rows=[...optHostRef.querySelectorAll('#answersList .arow')];
+      const answers=rows.map(r=>({
+        text:r.querySelector('input[type="text"]').value.trim(),
+        hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim(),
+        image:r.dataset.img||'', audio:r.dataset.aud||''
+      })).filter(a=>a.text||a.image||a.audio);
+      if(type==='single'){ const idx=rows.findIndex(r=> r.querySelector('input[type="radio"]').checked); Object.assign(q,{answers,correct:idx}); }
+      else { const corrects=rows.map((r,i)=> r.querySelector('input[type="checkbox"]').checked? i : -1).filter(i=>i!==-1); Object.assign(q,{answers,corrects}); }
+    }
+    if(type==='text'){
+      q.acceptable=[...optHostRef.querySelectorAll('#txtAccept .row')].map(r=>({
+        text:r.querySelector('input[placeholder="Text"]').value.trim(),
+        hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim()
+      })).filter(o=>o.text);
+    }
+    if(type==='multitext'){
+      q.prompts=[...optHostRef.querySelectorAll('#multiPrompts .row')].map(r=>({
+        text:r.querySelector('input[placeholder="Text"]').value.trim(),
+        hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim()
+      })).filter(o=>o.text);
+    }
+    if(type==='matching'){
+      q.pairs=[...optHostRef.querySelectorAll('#pairsWrap .pair')].map(row=>{
+        const leftWrap=row.children[0], rightWrap=row.children[1];
+        const lText=leftWrap.querySelector('input[placeholder="Left text"]').value.trim();
+        const lHint=(leftWrap.querySelector('input[placeholder="Left hint (optional)"]')?.value||'').trim();
+        const lMedia=leftWrap.querySelector('.row');
+        const rText=rightWrap.querySelector('input[placeholder="Right text"]').value.trim();
+        const rHint=(rightWrap.querySelector('input[placeholder="Right hint (optional)"]')?.value||'').trim();
+        const rMedia=rightWrap.querySelector('.row');
+        return { left:{text:lText, hint:lHint, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||''}, right:{text:rText, hint:rHint, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||''} };
+      }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.right.text||p.right.image||p.right.audio));
+    }
+    if(type==='order'){
+      q.sequence=[...optHostRef.querySelectorAll('#orderList .order-row')].map(r=>{
+        const t=r.querySelector('input[placeholder="Item text"]').value.trim();
+        const h=(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim();
+        const m=r.querySelector('.row');
+        return { text:t, hint:h, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'' };
+      }).filter(it=> it.text||it.image||it.audio);
+    }
+    return q;
+  };
+
+  // Override renderPlayText to accept acceptable objects
+  window.renderPlayText = function(q, qc, qctrl){
+    const inp=el('input',{type:'text',placeholder:'Your answer'}); qc.appendChild(inp);
+    const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? a : (a?.text||''));
+    const check=()=>{ const u=normalizeText(inp.value); const ok=acceptable.some(a=> normalizeText(a)===u ); return ok; };
+    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ proceed(check(),q); }});
+  };
+})();
+</script>
+</body>
+</html>
