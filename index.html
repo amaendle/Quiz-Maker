@@ -171,7 +171,8 @@
 <script>
 // ===== State =====
 let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
-let meta = Object.assign({categories:[]}, JSON.parse(localStorage.getItem('quizMeta')||'{}'));
+let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
+function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
   feedback:'immediate', showComments:true, theme:'formal', lang:'en',
   random:false, randomCount:5, timeLimitSec:0,
@@ -249,41 +250,129 @@ cAudClear.onclick=()=>{ cAud.value=''; cAudData=''; cAudMini.innerHTML=''; cAudM
 // ===== Editor renderers =====
 const optHost = document.getElementById('questionOptionsContainer');
 const qTypeSel = document.getElementById('questionType');
+// ===== Categories / Topics (no global `quiz` needed) =====
+// Simple slug from a label (for stable IDs)
+function slugFromLabel(str){
+  return String(str||'cat')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'') || 'cat';
+}
 
-function renderCategorySelect(selectedId){
-  const sel = el('select',{className:'form-select'});
+// Rebuilds the <select id="categorySelect">; adds a "New…" option that opens inline UI
+function renderCategorySelect(){
+  const sel = document.getElementById('categorySelect');
+  const ui  = document.getElementById('categoryNewUI');
+  if(!sel) return;
 
-  // option: none
-  sel.appendChild(el('option',{value:''}, '(no category)'));
+  const prev = sel.value;
+  sel.innerHTML = '';
 
-  // option: new
-  sel.appendChild(el('option',{value:'__new__'}, '➕ New...'));
-
-  // existing categories from quiz.categories
-  const cats = quiz.categories || {};
-  Object.keys(cats).forEach(id=>{
-    sel.appendChild(el('option',{value:id, selected:(id===selectedId)}, cats[id]));
+  sel.appendChild(new Option('— none —',''));
+  (meta.categories||[]).forEach(c=>{
+    const label = (c.labels && (c.labels[settings?.lang || 'en'] || c.id)) || c.id;
+    sel.appendChild(new Option(label, c.id));
   });
+  sel.appendChild(new Option('➕ New…','__new__'));
 
-  // handle "new" creation
+  // restore previous selection if still present
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
+
+  // hook: show inline creator when "New…" is chosen
   sel.onchange = ()=>{
-    if(sel.value==='__new__'){
-      const label = prompt('Enter new category/topic name:');
-      if(label && label.trim()){
-        const newId = 'cat'+Date.now();
-        if(!quiz.categories) quiz.categories={};
-        quiz.categories[newId]=label.trim();
-        // replace current select with updated version
-        const newSel = renderCategorySelect(newId);
-        sel.replaceWith(newSel);
-      } else {
-        sel.value='';
-      }
+    if(sel.value === '__new__'){
+      showNewCategoryUI();
+    } else if(ui){
+      ui.style.display = 'none';
+      ui.innerHTML = '';
     }
   };
-
-  return sel;
 }
+
+// Inline "create new category" UI shown under the select
+function showNewCategoryUI(){
+  const ui = document.getElementById('categoryNewUI');
+  const sel = document.getElementById('categorySelect');
+  if(!ui || !sel) return;
+
+  ui.style.display = 'block';
+  ui.innerHTML = '';
+
+  const lang = (settings && settings.lang) || 'en';
+  const nameIn = el('input',{type:'text', placeholder: lang==='de'?'Neuer Kategoriename':'New category name'});
+  const idIn   = el('input',{type:'text', placeholder:'id (auto from name)'});
+  const create = el('button',{className:'btn btn-primary'}, lang==='de'?'Erstellen':'Create');
+  const cancel = el('button',{className:'btn btn-ghost'}, lang==='de'?'Abbrechen':'Cancel');
+
+  // auto-suggest id from name if empty
+  nameIn.oninput = ()=>{ if(!idIn.value.trim()) idIn.value = slugFromLabel(nameIn.value); };
+
+  create.onclick = ()=>{
+    const label = nameIn.value.trim();
+    const id    = (idIn.value.trim() || slugFromLabel(label));
+    if(!label){ alert(lang==='de'?'Bitte Namen eingeben':'Please enter a name'); return; }
+    if(!meta.categories) meta.categories = [];
+    if(meta.categories.some(c=>c.id===id)){ alert(lang==='de'?'ID existiert bereits':'ID already exists'); return; }
+
+    // create with current language label (you can fill others later in Settings)
+    const labels = { en:'', de:'' };
+    labels[lang] = label;
+
+    meta.categories.push({ id, labels });
+    saveMeta();
+
+    renderCategorySelect();
+    sel.value = id; // select the new one
+    ui.style.display = 'none';
+    ui.innerHTML = '';
+  };
+
+  cancel.onclick = ()=>{
+    ui.style.display = 'none';
+    ui.innerHTML = '';
+    // revert selection back to none
+    if(sel.value === '__new__') sel.value = '';
+  };
+
+  ui.append(el('div',{className:'row'}, nameIn, idIn, create, cancel));
+}
+
+// (Optional) categories manager for Settings, if you have a <div id="catsManager">
+function renderCategoriesManager(){
+  const host = document.getElementById('catsManager');
+  if(!host) return;
+  host.innerHTML = '';
+
+  host.appendChild(el('div',{className:'muted'}, 'Define categories/topics. Each has an id and labels per language.'));
+  const list = el('div',{}); host.appendChild(list);
+
+  (meta.categories||[]).forEach((c,idx)=>{
+    const row = el('div',{className:'row'});
+    const idIn = el('input',{type:'text',value:c.id,placeholder:'id'});
+    const enIn = el('input',{type:'text',value:c.labels?.en||'',placeholder:'English label'});
+    const deIn = el('input',{type:'text',value:c.labels?.de||'',placeholder:'Deutsch'});
+    const del  = el('button',{className:'btn btn-ghost',onclick:()=>{
+      meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
+    }},'Remove');
+
+    idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
+    enIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.en = enIn.value; saveMeta(); renderCategorySelect(); };
+    deIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.de = deIn.value; saveMeta(); renderCategorySelect(); };
+
+    row.append(idIn,enIn,deIn,del);
+    list.appendChild(row);
+  });
+
+  const add = el('button',{className:'btn'}, '➕ Add category');
+  add.onclick = ()=>{
+    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), labels:{en:'',de:''} });
+    saveMeta(); renderCategoriesManager(); renderCategorySelect();
+  };
+  host.appendChild(add);
+}
+
+// Initialize the dropdown at load:
+document.addEventListener('DOMContentLoaded', renderCategorySelect);
 
 // Small helpers
 function mediaPickers(hostRow, init={}){
