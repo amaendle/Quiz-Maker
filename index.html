@@ -46,17 +46,17 @@
 <main>
   <h1>📚 Quiz Maker</h1>
   <div class="tabs">
-    <button id="tab-editor">✏️ Editor</button>
-    <button id="tab-player">▶️ Play</button>
-    <button id="tab-settings">⚙️ Settings</button>
+    <button id="tab-editor"></button>
+    <button id="tab-player"></button>
+    <button id="tab-settings"></button>
   </div>
 
   <section id="editor" class="tab-content">
-    <h2>Edit Questions</h2>
+    <h2 id="editorTitle">Edit Questions</h2>
     <button id="newQuestion" class="btn">➕ New question</button>
 
     <div id="editorForm" style="display:none">
-      <label>Question</label>
+      <label id="questionLabel">Question</label>
       <input id="questionText" type="text" placeholder="Type your question" />
       <div class="row" id="qMediaRow">
         <input type="file" id="qImg" accept="image/*" style="display:none"/>
@@ -69,19 +69,19 @@
         <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
       </div>
 
-      <label>Type</label>
+      <label id="questionTypeLabel">Type</label>
       <select id="questionType">
-        <option value="single">Single Choice</option>
-        <option value="multiple">Multiple Choice</option>
-        <option value="text">Enter Answer (text)</option>
-        <option value="multitext">Multiple Text Inputs</option>
-        <option value="matching">Matching (drag right)</option>
-        <option value="order">Put in the right order</option>
+        <option id="questionTypeSingle" value="single">Single Choice</option>
+        <option id="questionTypeMultiple" value="multiple">Multiple Choice</option>
+        <option id="questionTypeText" value="text">Enter Answer (text)</option>
+        <option id="questionTypeMultitext" value="multitext">Multiple Text Inputs</option>
+        <option id="questionTypeMatching" value="matching">Matching (drag right)</option>
+        <option id="questionTypeOrder" value="order">Put in the right order</option>
       </select>
 
       <div id="questionOptionsContainer" style="margin-top:10px"></div>
 
-      <label>Comment (optional)</label>
+      <label id="commentLabel">Comment (optional)</label>
       <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
       <div class="row" id="cMediaRow">
         <input type="file" id="cImg" accept="image/*" style="display:none"/>
@@ -94,78 +94,77 @@
         <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
       </div>
 
-      <label>Category / Topic (optional)</label>
-      <select id="categorySelect"><option value="">— none —</option></select>
+      <label id="categoryLabel">Category / Topic (optional)</label>
+      <select id="categorySelect"><option id="catNoneOption" value="">— none —</option></select>
       <div id="categoryNewUI" style="display:none;margin-top:8px"></div>
 
       <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
       <button id="cancelEdit" class="btn" type="button">Cancel</button>
     </div>
 
-    <h3 style="margin-top:18px">Saved Questions</h3>
+    <h3 id="savedQuestionsTitle" style="margin-top:18px">Saved Questions</h3>
     <ul id="questionList" style="list-style:none;padding-left:0"></ul>
 
     <div class="row" style="margin-top:10px">
       <input type="file" id="importFile" accept="application/json" style="display:none"/>
       <button id="importBtn" class="btn">📂 Import JSON</button>
       <button id="exportBtn" class="btn btn-primary">💾 Export JSON</button>
-      <span class="muted">(Media is embedded as data URLs)</span>
     </div>
   </section>
 
   <section id="player" class="tab-content" style="display:none">
-    <h2>Quiz Time</h2>
+    <h2 id="playerTitle">Quiz Time</h2>
     <div id="quizContainer"></div>
     <div id="quizControls"></div>
   </section>
 
   <section id="settings" class="tab-content" style="display:none">
-    <h2>Settings</h2>
-    <label>Theme
+    <h2 id="settingsTitle">Settings</h2>
+    <label id="themeLabel">Theme
       <select id="themeSelect">
-        <option value="formal">Formal</option>
-        <option value="playful">Playful</option>
-        <option value="child">Child-friendly</option>
+        <option id="themeFormal" value="formal">Formal</option>
+        <option id="themePlayful" value="playful">Playful</option>
+        <option id="themeChild" value="child">Child-friendly</option>
       </select>
     </label>
-    <label>Language
+    <label id="langLabel">Language
       <select id="langSelect">
         <option value="en">English</option>
         <option value="de">Deutsch</option>
       </select>
     </label>
-    <h3>Feedback</h3>
-    <label><input type="checkbox" id="feedbackImmediate" checked> Immediate feedback</label>
-    <label><input type="checkbox" id="feedbackEnd"> Feedback details at end</label>
-    <label><input type="checkbox" id="showCorrectImmediate" checked> Show correct answer when wrong (immediate)</label>
-    <label><input type="checkbox" id="showComments" checked> Show comments</label>
-    <label><input type="checkbox" id="linkifyComments"> Linkify comment URLs</label>
-    <h3>Validation</h3>
-    <label><input type="checkbox" id="autoValidate" checked> Validate automatically (default)</label>
-    <h3>Random mode</h3>
-    <label><input type="checkbox" id="randomMode"> Randomize questions</label>
-    <label>Number of questions <input type="number" id="randomCount" min="1"></label>
-    <h3>Time Limit</h3>
-    <label>Time (seconds) <input type="number" id="timeLimitSec" min="0"></label>
-    <h3>Text Matching</h3>
-    <label><input type="checkbox" id="caseSensitive"> Case sensitive</label>
-    <label><input type="checkbox" id="ignorePunct" checked> Ignore punctuation</label>
-    <label><input type="checkbox" id="normalizeAccents" checked> Normalize accents</label>
-    <label><input type="checkbox" id="ignoreSpaces" checked> Collapse spaces</label>
-    <label><input type="checkbox" id="regexFull" checked> Full regex match (^...$)</label>
-    <h3>Multiple Choice Scoring</h3>
+    <h3 id="feedbackHeading">Feedback</h3>
+    <label><input type="checkbox" id="feedbackImmediate" checked> <span id="feedbackImmediateLabel">Immediate feedback</span></label>
+    <label><input type="checkbox" id="feedbackEnd"> <span id="feedbackEndLabel">Feedback details at end</span></label>
+    <label><input type="checkbox" id="showCorrectImmediate" checked> <span id="showCorrectImmediateLabel">Show correct answer when wrong (immediate)</span></label>
+    <label><input type="checkbox" id="showComments" checked> <span id="showCommentsLabel">Show comments</span></label>
+    <label><input type="checkbox" id="linkifyComments"> <span id="linkifyCommentsLabel">Linkify comment URLs</span></label>
+    <h3 id="validationHeading">Validation</h3>
+    <label><input type="checkbox" id="autoValidate" checked> <span id="autoValidateLabel">Validate automatically (default)</span></label>
+    <h3 id="randomHeading">Random mode</h3>
+    <label><input type="checkbox" id="randomMode"> <span id="randomModeLabel">Randomize questions</span></label>
+    <label id="randomCountLabel">Number of questions <input type="number" id="randomCount" min="1"></label>
+    <h3 id="timeHeading">Time Limit</h3>
+    <label id="timeLimitLabel">Time (seconds) <input type="number" id="timeLimitSec" min="0"></label>
+    <h3 id="textMatchHeading">Text Matching</h3>
+    <label><input type="checkbox" id="caseSensitive"> <span id="caseSensitiveLabel">Case sensitive</span></label>
+    <label><input type="checkbox" id="ignorePunct" checked> <span id="ignorePunctLabel">Ignore punctuation</span></label>
+    <label><input type="checkbox" id="normalizeAccents" checked> <span id="normalizeAccentsLabel">Normalize accents</span></label>
+    <label><input type="checkbox" id="ignoreSpaces" checked> <span id="ignoreSpacesLabel">Collapse spaces</span></label>
+    <label><input type="checkbox" id="regexFull" checked> <span id="regexFullLabel">Full regex match (^...$)</span></label>
+    <h3 id="mcqHeading">Multiple Choice Scoring</h3>
     <select id="mcqScore">
-      <option value="all">All-or-nothing</option>
-      <option value="partial">Partial credit</option>
-      <option value="partial_penalty">Partial with penalty</option>
+      <option id="mcq_all" value="all">All-or-nothing</option>
+      <option id="mcq_partial" value="partial">Partial credit</option>
+      <option id="mcq_partial_penalty" value="partial_penalty">Partial with penalty</option>
     </select>
-    <h3>Speech</h3>
-    <label><input type="checkbox" id="autoTTSQuestions"> Auto-TTS questions</label>
-    <label><input type="checkbox" id="autoTTSItems"> Auto-TTS items/options</label>
+    <h3 id="speechHeading">Speech</h3>
+    <label><input type="checkbox" id="autoTTSQuestions"> <span id="autoTTSQuestionsLabel">Auto-TTS questions</span></label>
+    <label><input type="checkbox" id="autoTTSItems"> <span id="autoTTSItemsLabel">Auto-TTS items/options</span></label>
 
-    <h3>Play mode</h3>
-    <label><input type="checkbox" id="showCategory"> Show category during play</label>
-    <label><input type="checkbox" id="allowSkip"> Allow skipping questions</label>
+    <h3 id="playModeHeading">Play mode</h3>
+    <label><input type="checkbox" id="showCategory"> <span id="showCategoryLabel">Show category during play</span></label>
+    <label><input type="checkbox" id="allowSkip"> <span id="allowSkipLabel">Allow skipping questions</span></label>
 
     <h3><button id="catsToggle" class="btn" type="button">Categories / Topics / Mottos</button></h3>
     <div id="catsPanel"><div id="catsManager"></div></div>
@@ -179,6 +178,7 @@
 // ===== State =====
 let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
 let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
+meta.categories = (meta.categories || []).map(c=> c.label? c : {id:c.id, label:(c.labels?.en || c.labels?.de || c.id), hint:c.hint||''});
 function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
   feedbackImmediate:true,
@@ -200,10 +200,106 @@ if('feedback' in settings){
 }
 document.documentElement.lang = settings.lang || 'en';
 const STRINGS={
-  en:{submit:'Submit',next:'Next',skip:'Skip',correct:'Correct',wrong:'Wrong',time:'Time\'s up!',score:'Score',answers:'Answers'},
-  de:{submit:'Senden',next:'Weiter',skip:'Überspringen',correct:'Richtig',wrong:'Falsch',time:'Zeit abgelaufen!',score:'Punkte',answers:'Antworten'}
+  en:{submit:'Submit',next:'Next',skip:'Skip',correct:'Correct',wrong:'Wrong',time:'Time\'s up!',score:'Score',answers:'Answers',goodguess:'Good guess!'},
+  de:{submit:'Senden',next:'Weiter',skip:'Überspringen',correct:'Richtig',wrong:'Falsch',time:'Zeit abgelaufen!',score:'Punkte',answers:'Antworten',goodguess:'Guter Tipp!'}
 };
 function t(k){ const lang=settings.lang||'en'; return (STRINGS[lang]&&STRINGS[lang][k])||STRINGS.en[k]||k; }
+
+function applyLang(){
+  const lang=settings.lang||'en';
+  const tx={
+    'tab-editor': lang==='de'?'✏️ Editor':'✏️ Editor',
+    'tab-player': lang==='de'?'▶️ Spielen':'▶️ Play',
+    'tab-settings': lang==='de'?'⚙️ Einstellungen':'⚙️ Settings',
+    'editorTitle': lang==='de'?'Fragen bearbeiten':'Edit Questions',
+    'newQuestion': lang==='de'?'➕ Neue Frage':'➕ New question',
+    'questionLabel': lang==='de'?'Frage':'Question',
+    'questionText': {placeholder: lang==='de'?'Gib deine Frage ein':'Type your question'},
+    'qImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'qImgClear': lang==='de'?'Bild löschen':'Clear image',
+    'qAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
+    'qAudClear': lang==='de'?'Audio löschen':'Clear audio',
+    'questionTypeLabel': lang==='de'?'Typ':'Type',
+    'questionTypeSingle': lang==='de'?'Einzelauswahl':'Single Choice',
+    'questionTypeMultiple': lang==='de'?'Mehrfachauswahl':'Multiple Choice',
+    'questionTypeText': lang==='de'?'Antwort eingeben (Text)':'Enter Answer (text)',
+    'questionTypeMultitext': lang==='de'?'Mehrere Texteingaben':'Multiple Text Inputs',
+    'questionTypeMatching': lang==='de'?'Zuordnen (rechts ziehen)':'Matching (drag right)',
+    'questionTypeOrder': lang==='de'?'In die richtige Reihenfolge bringen':'Put in the right order',
+    'commentLabel': lang==='de'?'Kommentar (optional)':'Comment (optional)',
+    'questionComment': {placeholder: lang==='de'?'Wird bei Feedback angezeigt, wenn aktiviert':'Shown with feedback when enabled'},
+    'cImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'cImgClear': lang==='de'?'Bild löschen':'Clear image',
+    'cAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
+    'cAudClear': lang==='de'?'Audio löschen':'Clear audio',
+    'categoryLabel': lang==='de'?'Kategorie / Thema (optional)':'Category / Topic (optional)',
+    'catNoneOption': lang==='de'?'— keine —':'— none —',
+    'saveQuestion': lang==='de'?'💾 Frage speichern':'💾 Save question',
+    'cancelEdit': lang==='de'?'Abbrechen':'Cancel',
+    'savedQuestionsTitle': lang==='de'?'Gespeicherte Fragen':'Saved Questions',
+    'importBtn': lang==='de'?'📂 JSON importieren':'📂 Import JSON',
+    'exportBtn': lang==='de'?'💾 JSON exportieren':'💾 Export JSON',
+    'playerTitle': lang==='de'?'Quiz-Zeit':'Quiz Time',
+    'settingsTitle': lang==='de'?'Einstellungen':'Settings',
+    'themeLabel': lang==='de'?'Design ':'Theme ',
+    'themeFormal': lang==='de'?'Formell':'Formal',
+    'themePlayful': lang==='de'?'Verspielt':'Playful',
+    'themeChild': lang==='de'?'Kinderfreundlich':'Child-friendly',
+    'langLabel': lang==='de'?'Sprache ':'Language ',
+    'feedbackHeading': lang==='de'?'Feedback':'Feedback',
+    'feedbackImmediateLabel': lang==='de'?'Sofortiges Feedback':'Immediate feedback',
+    'feedbackEndLabel': lang==='de'?'Feedback am Ende':'Feedback details at end',
+    'showCorrectImmediateLabel': lang==='de'?'Richtige Antwort anzeigen (sofort)':'Show correct answer when wrong (immediate)',
+    'showCommentsLabel': lang==='de'?'Kommentare anzeigen':'Show comments',
+    'linkifyCommentsLabel': lang==='de'?'Links in Kommentaren aktivieren':'Linkify comment URLs',
+    'validationHeading': lang==='de'?'Validierung':'Validation',
+    'autoValidateLabel': lang==='de'?'Automatisch prüfen (Standard)':'Validate automatically (default)',
+    'randomHeading': lang==='de'?'Zufallsmodus':'Random mode',
+    'randomModeLabel': lang==='de'?'Fragen zufällig anordnen':'Randomize questions',
+    'randomCountLabel': lang==='de'?'Anzahl der Fragen ':'Number of questions ',
+    'timeHeading': lang==='de'?'Zeitlimit':'Time Limit',
+    'timeLimitLabel': lang==='de'?'Zeit (Sekunden) ':'Time (seconds) ',
+    'textMatchHeading': lang==='de'?'Textabgleich':'Text Matching',
+    'caseSensitiveLabel': lang==='de'?'Groß-/Kleinschreibung beachten':'Case sensitive',
+    'ignorePunctLabel': lang==='de'?'Satzzeichen ignorieren':'Ignore punctuation',
+    'normalizeAccentsLabel': lang==='de'?'Akzente normalisieren':'Normalize accents',
+    'ignoreSpacesLabel': lang==='de'?'Leerzeichen zusammenfassen':'Collapse spaces',
+    'regexFullLabel': lang==='de'?'Voller Regex-Abgleich (^...$)':'Full regex match (^...$)',
+    'mcqHeading': lang==='de'?'Multiple-Choice-Bewertung':'Multiple Choice Scoring',
+    'mcq_all': lang==='de'?'Alles oder nichts':'All-or-nothing',
+    'mcq_partial': lang==='de'?'Teilpunkte':'Partial credit',
+    'mcq_partial_penalty': lang==='de'?'Teilpunkte mit Abzug':'Partial with penalty',
+    'speechHeading': lang==='de'?'Sprachausgabe':'Speech',
+    'autoTTSQuestionsLabel': lang==='de'?'Automatische TTS für Fragen':'Auto-TTS questions',
+    'autoTTSItemsLabel': lang==='de'?'Automatische TTS für Elemente/Optionen':'Auto-TTS items/options',
+    'playModeHeading': lang==='de'?'Spielmodus':'Play mode',
+    'showCategoryLabel': lang==='de'?'Kategorie während des Spiels anzeigen':'Show category during play',
+    'allowSkipLabel': lang==='de'?'Überspringen von Fragen erlauben':'Allow skipping questions',
+    'catsToggle': lang==='de'?'Kategorien / Themen / Mottos':'Categories / Topics / Mottos',
+    'saveSettings': lang==='de'?'Einstellungen speichern':'Save settings',
+    'settingsSaved': lang==='de'?'Gespeichert ✓':'Saved ✓'
+  };
+  const specials={
+    themeLabel:tx.themeLabel,
+    langLabel:tx.langLabel,
+    randomCountLabel:tx.randomCountLabel,
+    timeLimitLabel:tx.timeLimitLabel
+  };
+  delete tx.themeLabel; delete tx.langLabel; delete tx.randomCountLabel; delete tx.timeLimitLabel;
+  for(const [id,val] of Object.entries(tx)){
+    const el=document.getElementById(id);
+    if(!el) continue;
+    if(typeof val==='string'){
+      el.textContent=val;
+    } else if(val.placeholder!==undefined){
+      el.placeholder=val.placeholder;
+    }
+  }
+  const th=document.getElementById('themeLabel'); if(th && th.childNodes[0]) th.childNodes[0].textContent=specials.themeLabel;
+  const ll=document.getElementById('langLabel'); if(ll && ll.childNodes[0]) ll.childNodes[0].textContent=specials.langLabel;
+  const rc=document.getElementById('randomCountLabel'); if(rc && rc.childNodes[0]) rc.childNodes[0].textContent=specials.randomCountLabel;
+  const tl=document.getElementById('timeLimitLabel'); if(tl && tl.childNodes[0]) tl.childNodes[0].textContent=specials.timeLimitLabel;
+}
 let editingIndex = -1; // -1 means create new
 function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(settings)); }
 
@@ -298,12 +394,12 @@ function renderCategorySelect(){
   const prev = sel.value;
   sel.innerHTML = '';
 
-  sel.appendChild(new Option('— none —',''));
+  const noneLbl = settings.lang==='de'?'— keine —':'— none —';
+  sel.appendChild(new Option(noneLbl,''));
   (meta.categories||[]).forEach(c=>{
-    const label = (c.labels && (c.labels[settings?.lang || 'en'] || c.id)) || c.id;
-    sel.appendChild(new Option(label, c.id));
+    sel.appendChild(new Option(c.label||c.id, c.id));
   });
-  sel.appendChild(new Option('➕ New…','__new__'));
+  sel.appendChild(new Option('➕ '+(settings.lang==='de'?'Neu…':'New…'),'__new__'));
 
   // restore previous selection if still present
   if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
@@ -331,6 +427,7 @@ function showNewCategoryUI(){
   const lang = (settings && settings.lang) || 'en';
   const nameIn = el('input',{type:'text', placeholder: lang==='de'?'Neuer Kategoriename':'New category name'});
   const idIn   = el('input',{type:'text', placeholder:'id (auto from name)'});
+  const hintIn = el('input',{type:'text', placeholder: lang==='de'?'Hinweis (optional)':'Hint (optional)'});
   const create = el('button',{className:'btn btn-primary'}, lang==='de'?'Erstellen':'Create');
   const cancel = el('button',{className:'btn btn-ghost'}, lang==='de'?'Abbrechen':'Cancel');
 
@@ -340,15 +437,12 @@ function showNewCategoryUI(){
   create.onclick = ()=>{
     const label = nameIn.value.trim();
     const id    = (idIn.value.trim() || slugFromLabel(label));
+    const hint  = hintIn.value.trim();
     if(!label){ alert(lang==='de'?'Bitte Namen eingeben':'Please enter a name'); return; }
     if(!meta.categories) meta.categories = [];
     if(meta.categories.some(c=>c.id===id)){ alert(lang==='de'?'ID existiert bereits':'ID already exists'); return; }
 
-    // create with current language label (you can fill others later in Settings)
-    const labels = { en:'', de:'' };
-    labels[lang] = label;
-
-    meta.categories.push({ id, labels });
+    meta.categories.push({ id, label, hint });
     saveMeta();
 
     renderCategorySelect();
@@ -364,7 +458,7 @@ function showNewCategoryUI(){
     if(sel.value === '__new__') sel.value = '';
   };
 
-  ui.append(el('div',{className:'row'}, nameIn, idIn, create, cancel));
+  ui.append(el('div',{className:'row'}, nameIn, idIn, hintIn, create, cancel));
 }
 
 // (Optional) categories manager for Settings, if you have a <div id="catsManager">
@@ -374,29 +468,30 @@ function renderCategoriesManager(){
   if(!host) return;
   host.innerHTML = '';
 
-  host.appendChild(el('div',{className:'muted'}, 'Define categories/topics. Each has an id and labels per language.'));
+  const lang=(settings&&settings.lang)||'en';
+  host.appendChild(el('div',{className:'muted'}, lang==='de'? 'Definiere Kategorien/Themen. Jede hat eine ID, Bezeichnung und optionalen Hinweis.':'Define categories/topics. Each has an id, label, and optional hint.'));
   const list = el('div',{}); host.appendChild(list);
 
   (meta.categories||[]).forEach((c,idx)=>{
     const row = el('div',{className:'row',style:'flex-wrap:nowrap;align-items:center'});
     const idIn = el('input',{type:'text',value:c.id,placeholder:'id',style:'width:80px'});
-    const enIn = el('input',{type:'text',value:c.labels?.en||'',placeholder:'English label',style:'flex:1;width:auto'});
-    const deIn = el('input',{type:'text',value:c.labels?.de||'',placeholder:'Deutsch',style:'flex:1;width:auto'});
-    const del  = el('button',{className:'btn btn-ghost',title:'Remove',onclick:()=>{
+    const labelIn = el('input',{type:'text',value:c.label||'',placeholder:lang==='de'?'Bezeichnung':'Label',style:'flex:1;width:auto'});
+    const hintIn = el('input',{type:'text',value:c.hint||'',placeholder:lang==='de'?'Hinweis (optional)':'Hint (optional)',style:'flex:1;width:auto'});
+    const del  = el('button',{className:'btn btn-ghost',title:lang==='de'?'Entfernen':'Remove',onclick:()=>{
       meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
     }},'🗑️');
 
     idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
-    enIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.en = enIn.value; saveMeta(); renderCategorySelect(); };
-    deIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.de = deIn.value; saveMeta(); renderCategorySelect(); };
+    labelIn.oninput = ()=>{ c.label = labelIn.value; saveMeta(); renderCategorySelect(); };
+    hintIn.oninput = ()=>{ c.hint = hintIn.value; saveMeta(); };
 
-    row.append(idIn,enIn,deIn,del);
+    row.append(idIn,labelIn,hintIn,del);
     list.appendChild(row);
   });
 
-  const add = el('button',{className:'btn'}, '➕ Add category');
+  const add = el('button',{className:'btn'}, '➕ '+(lang==='de'?'Kategorie hinzufügen':'Add category'));
   add.onclick = ()=>{
-    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), labels:{en:'',de:''} });
+    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), label:'', hint:'' });
     saveMeta(); renderCategoriesManager(); renderCategorySelect();
   };
   host.appendChild(add);
@@ -577,6 +672,7 @@ function renderQuestionList(){
   const ul=document.getElementById('questionList'); ul.innerHTML='';
   questions.forEach((q,i)=>{
     const li=el('li',{className:'question-item'});
+    li.dataset.index=i;
     const content=el('div',{className:'q-content'});
     const title=el('span',{className:'q-title'}, q.question||'(untitled)');
     content.append(title);
@@ -605,13 +701,14 @@ function renderQuestionList(){
 renderQuestionList();
 
 document.getElementById('saveQuestion').onclick=()=>{
-  const qtext=document.getElementById('questionText').value.trim(); if(!qtext) { alert('Enter a question'); return; }
+  const lang=settings.lang||'en';
+  const qtext=document.getElementById('questionText').value.trim(); if(!qtext) { alert(lang==='de'?'Frage eingeben':'Enter a question'); return; }
   const q=collectQuestion();
-  if(q.type==='single'&& (q.correct==null||q.correct<0)) { alert('Mark the correct answer'); return; }
-  if(q.type==='multiple'&& (!q.corrects||!q.corrects.length)) { alert('Mark at least one correct'); return; }
-  if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert('Add at least one acceptable'); return; }
-  if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert('Add at least one pair'); return; }
-  if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert('Add at least two items'); return; }
+  if(q.type==='single'&& (q.correct==null||q.correct<0)) { alert(lang==='de'?'Markiere die richtige Antwort':'Mark the correct answer'); return; }
+  if(q.type==='multiple'&& (!q.corrects||!q.corrects.length)) { alert(lang==='de'?'Markiere mindestens eine richtige':'Mark at least one correct'); return; }
+  if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert(lang==='de'?'Füge mindestens eine akzeptierte Antwort hinzu':'Add at least one acceptable'); return; }
+  if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert(lang==='de'?'Füge mindestens ein Paar hinzu':'Add at least one pair'); return; }
+  if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert(lang==='de'?'Füge mindestens zwei Elemente hinzu':'Add at least two items'); return; }
   q.comment=document.getElementById('questionComment').value.trim();
   if(editingIndex>=0){ questions[editingIndex]=q; }
   else questions.push(q);
@@ -631,7 +728,7 @@ document.getElementById('newQuestion').onclick=()=>{
   document.getElementById('editor').scrollIntoView({behavior:'smooth'});
 };
 
-function saveReorder(){ const ul=document.getElementById('questionList'); const titles=[...ul.children].map(li=>li.childNodes[0].nodeValue.trim()); const map=titles.map(t=> questions.find(q=>q.question===t)); questions=map; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); }
+function saveReorder(){ const ul=document.getElementById('questionList'); questions=[...ul.children].map(li=>questions[parseInt(li.dataset.index,10)]); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); }
 
 // ===== Settings =====
 function applySettingsToUI(){
@@ -643,6 +740,7 @@ function applySettingsToUI(){
   document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip;
   renderCategorySelect();
   renderCategoriesManager();
+  applyLang();
 }
 applySettingsToUI();
 
@@ -680,6 +778,9 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.showCategory=document.getElementById('showCategory').checked;
   settings.allowSkip=document.getElementById('allowSkip').checked;
   document.documentElement.lang = settings.lang || 'en';
+  applyLang();
+  renderCategorySelect();
+  renderCategoriesManager();
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
@@ -702,6 +803,7 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
   if(impFile){ impFile.onchange=(ev)=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ try{ const data=JSON.parse(e.target.result);
     if(Array.isArray(data)) { questions=data; }
     else if(data && Array.isArray(data.questions)) { questions=data.questions; meta.categories = Array.isArray(data.categories)? data.categories : (data.meta&&Array.isArray(data.meta.categories)? data.meta.categories : meta.categories); }
+    meta.categories = (meta.categories||[]).map(c=> c.label? c : {id:c.id, label:(c.labels?.en||c.labels?.de||c.id), hint:c.hint||''});
     else throw new Error('Invalid JSON');
     localStorage.setItem('quizData', JSON.stringify(questions)); localStorage.setItem('quizMeta', JSON.stringify(meta));
     renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ✓'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
@@ -730,7 +832,7 @@ function showCurrent(){
   qc.innerHTML=''; qctrl.innerHTML='';
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
-  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const lbl=cat.labels?.[settings.lang]||cat.labels?.en||cat.id; qc.appendChild(el('div',{className:'muted'}, lbl)); } }
+  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const wrap=el('div',{className:'muted'}, cat.label||cat.id); if(cat.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},cat.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; wrap.append(' ',hb,ht); } qc.appendChild(wrap); } }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
   if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
   if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
@@ -758,14 +860,14 @@ function showCurrent(){
   if(settings.allowSkip){ const sk=el('button',{className:'btn',onclick:skipQuestion}, t('skip')); qctrl.appendChild(sk); }
 }
 
-function proceed(ok, q, msg=''){
+function proceed(ok, q, msg='', opts={}){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   __playState.results.push({q, ok});
   if(settings.feedbackImmediate){
     const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? t('correct') : t('wrong')));
-    if(!ok && settings.showCorrectImmediate){
+    if((!ok || opts.showCorrect) && settings.showCorrectImmediate){
       const corr=describeCorrect(q);
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
@@ -816,20 +918,21 @@ function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??'
 // ===== Helpers for feedback =====
 function describeCorrect(q){
   try{
+    const lang=settings.lang||'en';
     if(q.type==='single'){
-      const a=q.answers?.[q.correct]; if(!a) return ''; return 'Correct answer: '+(a.text||'(media)');
+      const a=q.answers?.[q.correct]; if(!a) return ''; return (lang==='de'?'Richtige Antwort: ':'Correct answer: ')+(a.text||'(media)');
     }
     if(q.type==='multiple'){
-      const idxs=q.corrects||[]; const texts=idxs.map(i=> q.answers?.[i]?.text||'(media)').filter(Boolean); return 'Correct answers: '+texts.join(', ');
+      const idxs=q.corrects||[]; const texts=idxs.map(i=> q.answers?.[i]?.text||'(media)').filter(Boolean); return (lang==='de'?'Richtige Antworten: ':'Correct answers: ')+texts.join(', ');
     }
     if(q.type==='text'){
-      const acc=q.acceptable||[]; const first=acc[0]; if(!first) return ''; const txt= typeof first==='object'? first.text : first; return 'Acceptable: '+txt;
+      const acc=q.acceptable||[]; const first=acc[0]; if(!first) return ''; const txt= typeof first==='object'? first.text : first; return (lang==='de'?'Akzeptiert: ':'Acceptable: ')+txt;
     }
     if(q.type==='matching'){
-      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return 'Pairs: '+lines.join(' | ');
+      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return (lang==='de'?'Paare: ':'Pairs: ')+lines.join(' | ');
     }
     if(q.type==='order'){
-      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return 'Order: '+t.join(' → ');
+      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return (lang==='de'?'Reihenfolge: ':'Order: ')+t.join(' → ');
     }
     if(q.type==='multitext'){
       const ans=(q.prompts||[]).map(p=> (p?.text||p||'')).filter(Boolean);
@@ -1176,14 +1279,29 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
 
   // Override renderPlayText to accept acceptable objects
   window.renderPlayText = function(q, qc, qctrl){
-    const inp=el('input',{type:'text',placeholder:'Your answer'});
+    const inp=el('input',{type:'text',placeholder:settings.lang==='de'?'Deine Antwort':'Your answer'});
     qc.appendChild(inp);
     inp.focus();
     const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
     const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
     if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
-    const check=()=>{ const u=normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
-    const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>proceed(check(), q); qctrl.appendChild(s);
+    const check=()=>{
+      const u=normalizeText(inp.value);
+      if(acceptable.some(a=> normalizeText(a.text)===u)) return {ok:true};
+      if(acceptable.length>=2){
+        const exact=parseInt(acceptable[0].text,10);
+        const m=acceptable[1].text.match(/^\[(\d+),(\d+)\]$/);
+        const val=parseInt(inp.value,10);
+        if(Number.isInteger(exact) && m && Number.isInteger(val)){
+          const a=parseInt(m[1],10), b=parseInt(m[2],10);
+          if(val>=a && val<=b && val!==exact) return {ok:true, goodGuess:true};
+        }
+      }
+      return {ok:false};
+    };
+    const s=el('button',{className:'btn btn-primary'}, t('submit'));
+    s.onclick=()=>{ const r=check(); if(r.goodGuess) proceed(true,q,t('goodguess'),{showCorrect:true}); else proceed(r.ok,q); };
+    qctrl.appendChild(s);
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } });
   };
 })();
