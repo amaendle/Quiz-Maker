@@ -163,6 +163,10 @@
     <h3>Immediate feedback detail</h3>
     <label><input type="checkbox" id="showCorrectImmediate" checked> Show correct answer when wrong (immediate)</label>
 
+    <h3>Play mode</h3>
+    <label><input type="checkbox" id="showCategory"> Show category during play</label>
+    <label><input type="checkbox" id="allowSkip"> Allow skipping questions</label>
+
     <h3>Categories / Topics / Mottos</h3>
     <div id="catsManager"></div>
 
@@ -181,10 +185,16 @@ let settings = Object.assign({
   random:false, randomCount:5, timeLimitSec:0,
   caseSensitive:false, ignorePunct:true, normalizeAccents:true, ignoreSpaces:true, regexFull:true,
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
-  showCorrectImmediate:true
+  showCorrectImmediate:true,
+  showCategory:false,
+  allowSkip:false
 }, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
 let editingIndex = -1; // -1 means create new
 function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(settings)); }
+
+let __keyHandlers=[];
+function addKeyHandler(fn){ document.addEventListener('keydown', fn); __keyHandlers.push(fn); }
+function clearKeyHandlers(){ __keyHandlers.forEach(h=>document.removeEventListener('keydown',h)); __keyHandlers=[]; }
 
 // ===== Helpers =====
 function el(tag, props={}, ...kids){ const n=document.createElement(tag); Object.assign(n, props); kids.forEach(k=> n.append(k?.nodeType? k : (k??''))); return n; }
@@ -607,6 +617,7 @@ function applySettingsToUI(){
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
   document.getElementById('caseSensitive').checked=settings.caseSensitive; document.getElementById('ignorePunct').checked=settings.ignorePunct; document.getElementById('normalizeAccents').checked=settings.normalizeAccents; document.getElementById('ignoreSpaces').checked=settings.ignoreSpaces; document.getElementById('regexFull').checked=settings.regexFull; document.getElementById('mcqScore').value=settings.mcqScore; document.getElementById('autoTTSQuestions').checked=settings.autoTTSQuestions; document.getElementById('autoTTSItems').checked=settings.autoTTSItems; document.getElementById('showCorrectImmediate').checked=settings.showCorrectImmediate;
+  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip;
   renderCategorySelect();
   renderCategoriesManager();
 }
@@ -629,9 +640,11 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.ignoreSpaces=document.getElementById('ignoreSpaces').checked; 
   settings.regexFull=document.getElementById('regexFull').checked; 
   settings.mcqScore=document.getElementById('mcqScore').value; 
-  settings.autoTTSQuestions=document.getElementById('autoTTSQuestions').checked; 
-  settings.autoTTSItems=document.getElementById('autoTTSItems').checked; 
+  settings.autoTTSQuestions=document.getElementById('autoTTSQuestions').checked;
+  settings.autoTTSItems=document.getElementById('autoTTSItems').checked;
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
+  settings.showCategory=document.getElementById('showCategory').checked;
+  settings.allowSkip=document.getElementById('allowSkip').checked;
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
@@ -679,8 +692,10 @@ function startQuiz(){
 
 function showCurrent(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  clearKeyHandlers();
   qc.innerHTML=''; qctrl.innerHTML='';
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
+  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const lbl=cat.labels?.[settings.lang]||cat.labels?.en||cat.id; qc.appendChild(el('div',{className:'muted'}, lbl)); } }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
   if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
   if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
@@ -691,10 +706,12 @@ function showCurrent(){
   else if(q.type==='matching') renderPlayMatching(q, qc, qctrl);
   else if(q.type==='order') renderPlayOrder(q, qc, qctrl);
   else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
+  if(settings.allowSkip){ const sk=el('button',{className:'btn',onclick:skipQuestion}, 'Skip'); qctrl.appendChild(sk); }
 }
 
 function proceed(ok, q, msg=''){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  clearKeyHandlers();
   if(settings.feedback==='immediate'){
     const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? 'Correct' : 'Wrong'));
     if(!ok && settings.showCorrectImmediate){
@@ -702,12 +719,13 @@ function proceed(ok, q, msg=''){
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
     if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}); if(settings.linkifyComments) c.appendChild(linkifyText(q.comment)); else c.textContent=q.comment; if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);}
-    qc.appendChild(b); qctrl.innerHTML=''; qctrl.appendChild(el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'));
+    qc.appendChild(b); qctrl.innerHTML=''; const nx=el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'); qctrl.appendChild(nx); addKeyHandler(e=>{ if(e.key==='Enter') nextQuestion(); });
   } else { nextQuestion(); }
   if(ok) __playState.correct++;
 }
 
 function nextQuestion(){ __playState.idx++; if(__playState.idx>=__playState.pool.length) finalize(); else showCurrent(); }
+function skipQuestion(){ const q=__playState.pool.splice(__playState.idx,1)[0]; __playState.pool.push(q); showCurrent(); }
 function finalize(){ const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls'); qc.innerHTML=''; qctrl.innerHTML=''; qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`)); }
 
 // Media-aware renderer for items
@@ -740,6 +758,7 @@ function describeCorrect(q){
 // ===== Play renderers + validation =====
 function renderPlaySingle(q, qc, qctrl){
   q.answers = (q.answers||[]);
+  const btns=[];
   q.answers.forEach((a,i)=>{
     const b = el('button',{className:'btn opt'});
     const box = el('div',{});
@@ -760,8 +779,9 @@ function renderPlaySingle(q, qc, qctrl){
       else { markSubmit(()=> i===q.correct, qctrl, q); }
       if(settings.autoTTSItems && a.text) speak(a.text);
     };
-    qc.appendChild(b);
+    qc.appendChild(b); btns.push(b);
   });
+  addKeyHandler(e=>{ const idx=parseInt(e.key,10)-1; if(idx>=0 && idx<btns.length) btns[idx].click(); });
 }
 
 function renderPlayMultiple(q, qc, qctrl){
@@ -797,6 +817,7 @@ function renderPlayMultiple(q, qc, qctrl){
     proceed(ok,q);
   };
   qctrl.appendChild(s);
+  addKeyHandler(e=>{ if(e.key>='1' && e.key<='9'){ const idx=parseInt(e.key,10)-1; if(checks[idx]) checks[idx].checked=!checks[idx].checked; } else if(e.key==='Enter'){ s.click(); } });
 }
 
 function renderPlayText(q, qc, qctrl){
@@ -865,7 +886,7 @@ function renderPlayOrder(q, qc, qctrl){
   const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
-function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach(p=>{ const lbl=el('label',{},p.text||''); qc.appendChild(lbl); if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text'}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); }
+function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach((p,idx)=>{ if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); addKeyHandler(e=>{ if(e.key==='Enter') s.click(); }); }
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
@@ -954,7 +975,40 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     }
   }
   window.renderOptionsEditor = renderOptionsEditor_v2;
-  if(qTypeSelRef){ qTypeSelRef.onchange = ()=>window.renderOptionsEditor(); }
+  function convertQuestionData(prev, newType){
+    const out={};
+    if(newType==='text'){
+      if(prev.type==='single'){
+        const a=prev.answers?.[prev.correct]; if(a) out.acceptable=[{text:a.text||''}];
+      } else if(prev.type==='multiple'){
+        out.acceptable=(prev.corrects||[]).map(i=>({text:prev.answers?.[i]?.text||''}));
+      } else if(prev.acceptable){
+        out.acceptable=prev.acceptable;
+      }
+    }
+    if(newType==='single' || newType==='multiple'){
+      let answers=[];
+      if(prev.answers) answers=prev.answers;
+      else if(prev.acceptable) answers=prev.acceptable.map(a=>({text:a.text||a}));
+      out.answers=answers.length?answers:[{text:''},{text:''}];
+      if(newType==='single'){
+        out.correct=(prev.type==='single' && typeof prev.correct==='number')?prev.correct:0;
+      } else {
+        if(prev.type==='multiple') out.corrects=prev.corrects||[]; else if(prev.type==='single') out.corrects=[prev.correct]; else out.corrects=[];
+      }
+    }
+    return out;
+  }
+  if(qTypeSelRef){
+    qTypeSelRef.dataset.prevType=qTypeSelRef.value;
+    qTypeSelRef.onchange=()=>{
+      const prevType=qTypeSelRef.dataset.prevType;
+      let prev={type:prevType};
+      try{ const cur=qTypeSelRef.value; qTypeSelRef.value=prevType; prev=window.collectQuestion(); qTypeSelRef.value=cur; }catch(e){}
+      const newType=qTypeSelRef.value; qTypeSelRef.dataset.prevType=newType;
+      window.renderOptionsEditor(convertQuestionData(prev,newType));
+    };
+  }
   if(optHostRef){ window.renderOptionsEditor(); }
 
   // Override collectQuestion to include hints
