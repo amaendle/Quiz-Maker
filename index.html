@@ -20,8 +20,11 @@
   .btn-primary{background:var(--accent);border:none;color:#fff}
   .btn-ghost{background:transparent;border:1px dashed #b9cadd}
   .muted{color:var(--muted)}
-  .question-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;margin:8px 0;cursor:grab;position:relative}
+  .question-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 60px 10px 10px;margin:8px 0;cursor:grab;position:relative;display:flex;align-items:center}
   .question-item.dragging{opacity:.7}
+  .q-title{flex:1}
+  .tiny-thumb{width:24px;height:24px;object-fit:cover;margin-left:6px;border-radius:4px;vertical-align:middle}
+  .media-icon{margin-left:6px;font-size:18px;vertical-align:middle}
   .question-actions{position:absolute;right:8px;top:8px;display:flex;gap:6px}
   .banner{padding:10px 12px;border-radius:10px;margin-top:12px}
   .banner.ok{background:#e8f5e9;color:#1b5e20;border:1px solid #b7e1c0}
@@ -566,7 +569,11 @@ function hideEditorForm(){
 function renderQuestionList(){
   const ul=document.getElementById('questionList'); ul.innerHTML='';
   questions.forEach((q,i)=>{
-    const li=el('li',{className:'question-item'}, q.question||'(untitled)');
+    const li=el('li',{className:'question-item'});
+    const title=el('span',{className:'q-title'}, q.question||'(untitled)');
+    li.append(title);
+    if(q.questionMedia?.image){ li.appendChild(el('img',{src:q.questionMedia.image,className:'tiny-thumb'})); }
+    if(q.questionMedia?.audio){ li.appendChild(el('span',{className:'media-icon'},'🔈')); }
     const actions=el('div',{className:'question-actions'});
     const edit=el('button',{},'✏️');
     edit.onclick=()=>{
@@ -737,7 +744,7 @@ function proceed(ok, q, msg=''){
       const corr=describeCorrect(q);
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
-    if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}); if(settings.linkifyComments) c.appendChild(linkifyText(q.comment)); else c.textContent=q.comment; if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);}
+    if(settings.showComments && (q.comment || q.commentMedia?.image || q.commentMedia?.audio)){ const c=el('div',{className:'muted'}); if(q.comment){ if(settings.linkifyComments) c.appendChild(linkifyText(q.comment)); else c.textContent=q.comment; } if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c); }
     qc.appendChild(b);
     qctrl.innerHTML='';
     let advanced=false;
@@ -763,9 +770,13 @@ function finalize(){
       li.appendChild(el('span',{className:'muted'}, r.ok?' ✓':' ✗'));
       const corr=describeCorrect(r.q);
       if(corr) li.appendChild(el('div',{className:'muted'}, corr));
-      if(settings.showComments && r.q.comment){
+      if(settings.showComments && (r.q.comment || r.q.commentMedia?.image || r.q.commentMedia?.audio)){
         const c=el('div',{className:'muted'});
-        if(settings.linkifyComments) c.appendChild(linkifyText(r.q.comment)); else c.textContent=r.q.comment;
+        if(r.q.comment){
+          if(settings.linkifyComments) c.appendChild(linkifyText(r.q.comment)); else c.textContent=r.q.comment;
+        }
+        if(r.q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:r.q.commentMedia.image,className:'thumb'})));
+        if(r.q.commentMedia?.audio) c.appendChild(miniAudio(r.q.commentMedia.audio,'Comment audio'));
         li.appendChild(c);
       }
       list.appendChild(li);
@@ -1145,36 +1156,9 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
     const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
     if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
-    let submitted=false;
-    function check(){
-      const val=inp.value.trim();
-      const norm=normalizeText(val);
-      for(const a of acceptable){
-        if(normalizeText(a.text)===norm) return {ok:true};
-      }
-      if(acceptable.length>=2){
-        const firstInt=parseInt(acceptable[0].text,10);
-        if(String(firstInt)===normalizeText(acceptable[0].text)){
-          const second=acceptable[1];
-          let min,max;
-          if(second.range&&Array.isArray(second.range)){
-            min=parseFloat(second.range[0]);
-            max=parseFloat(second.range[1]);
-          } else {
-            const m=/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/.exec(second.text||'');
-            if(m){ min=parseFloat(m[1]); max=parseFloat(m[2]); }
-          }
-          const num=parseInt(val,10);
-          if(!isNaN(num)&&min!==undefined&&max!==undefined&&num>=min&&num<=max&&num!==firstInt){
-            return {ok:true,msg:'Good guess'};
-          }
-        }
-      }
-      return {ok:false};
-    }
-    function submit(){ if(submitted) return; submitted=true; inp.disabled=true; s.disabled=true; const res=check(); if(res.ok) proceed(true,q,res.msg||''); else proceed(false,q); }
-    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=submit; qctrl.appendChild(s);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); submit(); } });
+    const check=()=>{ const u=normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
+    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>proceed(check(), q); qctrl.appendChild(s);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } });
   };
 })();
 </script>
