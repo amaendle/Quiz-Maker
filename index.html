@@ -44,56 +44,60 @@
     <button id="tab-editor">✏️ Editor</button>
     <button id="tab-player">▶️ Play</button>
     <button id="tab-settings">⚙️ Settings</button>
-    <button id="tab-import">📂 Import</button>
-    <button id="tab-export">💾 Export</button>
   </div>
 
   <section id="editor" class="tab-content">
     <h2>Edit Questions</h2>
+    <button id="newQuestion" class="btn">➕ New question</button>
 
-    <label>Question</label>
-    <input id="questionText" type="text" placeholder="Type your question" />
-    <div class="row" id="qMediaRow">
-      <input type="file" id="qImg" accept="image/*" style="display:none"/>
-      <input type="file" id="qAud" accept="audio/*" style="display:none"/>
-      <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
-      <img id="qImgPrev" class="thumb" style="display:none"/>
-      <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
-      <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
-      <span id="qAudMini" style="display:none"></span>
-      <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+    <div id="questionForm" style="display:none">
+      <label>Question</label>
+      <input id="questionText" type="text" placeholder="Type your question" />
+      <div class="row" id="qMediaRow">
+        <input type="file" id="qImg" accept="image/*" style="display:none"/>
+        <input type="file" id="qAud" accept="audio/*" style="display:none"/>
+        <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
+        <img id="qImgPrev" class="thumb" style="display:none"/>
+        <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
+        <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
+        <span id="qAudMini" style="display:none"></span>
+        <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+      </div>
+
+      <label>Type</label>
+      <select id="questionType">
+        <option value="single">Single Choice</option>
+        <option value="multiple">Multiple Choice</option>
+        <option value="text">Enter Answer (text)</option>
+        <option value="multitext">Multiple Text Inputs</option>
+        <option value="matching">Matching (drag right)</option>
+        <option value="order">Put in the right order</option>
+      </select>
+
+      <div id="questionOptionsContainer" style="margin-top:10px"></div>
+
+      <label>Comment (optional)</label>
+      <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
+      <div class="row" id="cMediaRow">
+        <input type="file" id="cImg" accept="image/*" style="display:none"/>
+        <input type="file" id="cAud" accept="audio/*" style="display:none"/>
+        <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
+        <img id="cImgPrev" class="thumb" style="display:none"/>
+        <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
+        <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
+        <span id="cAudMini" style="display:none"></span>
+        <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+      </div>
+
+      <label>Category / Topic (optional)</label>
+      <select id="categorySelect"><option value="">— none —</option></select>
+      <div id="categoryNewUI" style="display:none;margin-top:8px"></div>
+
+      <div class="row">
+        <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
+        <button id="cancelEdit" class="btn btn-ghost" type="button">Cancel</button>
+      </div>
     </div>
-
-    <label>Type</label>
-    <select id="questionType">
-      <option value="single">Single Choice</option>
-      <option value="multiple">Multiple Choice</option>
-      <option value="text">Enter Answer (text)</option>
-      <option value="multitext">Multiple Text Inputs</option>
-      <option value="matching">Matching (drag right)</option>
-      <option value="order">Put in the right order</option>
-    </select>
-
-    <div id="questionOptionsContainer" style="margin-top:10px"></div>
-
-    <label>Comment (optional)</label>
-    <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
-    <div class="row" id="cMediaRow">
-      <input type="file" id="cImg" accept="image/*" style="display:none"/>
-      <input type="file" id="cAud" accept="audio/*" style="display:none"/>
-      <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
-      <img id="cImgPrev" class="thumb" style="display:none"/>
-      <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
-      <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
-      <span id="cAudMini" style="display:none"></span>
-      <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
-    </div>
-
-    <label>Category / Topic (optional)</label>
-    <select id="categorySelect"><option value="">— none —</option></select>
-<div id="categoryNewUI" style="display:none;margin-top:8px"></div>
-
-    <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
 
     <h3 style="margin-top:18px">Saved Questions</h3>
     <ul id="questionList" style="list-style:none;padding-left:0"></ul>
@@ -134,6 +138,7 @@
       <option value="score">Score only</option>
     </select>
     <label><input type="checkbox" id="showComments" checked> Show comments</label>
+    <label><input type="checkbox" id="linkifyComments" checked> Linkify URLs in comments</label>
     <h3>Validation</h3>
     <label><input type="checkbox" id="autoValidate" checked> Validate automatically (default)</label>
     <h3>Random mode</h3>
@@ -171,9 +176,10 @@
 <script>
 // ===== State =====
 let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
-let meta = Object.assign({categories:[]}, JSON.parse(localStorage.getItem('quizMeta')||'{}'));
+let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
+function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
-  feedback:'immediate', showComments:true, theme:'formal', lang:'en',
+  feedback:'immediate', showComments:true, linkifyComments:true, theme:'formal', lang:'en',
   random:false, randomCount:5, timeLimitSec:0,
   caseSensitive:false, ignorePunct:true, normalizeAccents:true, ignoreSpaces:true, regexFull:true,
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
@@ -224,8 +230,14 @@ function normalizeText(s){
   if(!settings.caseSensitive){ out = out.toLowerCase(); }
   return out;
 }
+
+function linkify(str){
+  const re = /(https?:\/\/[^\s]+)/g;
+  return String(str || '').replace(re, '<a href="$1" target="_blank">$1</a>');
+}
 const fileToDataURL=f=>new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);});
 function miniAudio(url,label='Play'){ const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','false'); b.textContent='🔈 '+label; const a=new Audio(url); b.onclick=()=>{ if(b.getAttribute('aria-pressed')==='true'){ a.pause(); a.currentTime=0; b.setAttribute('aria-pressed','false'); } else { a.play().catch(()=>{}); b.setAttribute('aria-pressed','true'); a.onended=()=>b.setAttribute('aria-pressed','false'); } }; return b; }
+function miniVideo(url){ const v=document.createElement('video'); v.src=url; v.controls=true; v.className='thumb'; return v; }
 
 // ===== Media pickers (question/comment) =====
 let qImgData='', qAudData='', cImgData='', cAudData='';
@@ -249,56 +261,179 @@ cAudClear.onclick=()=>{ cAud.value=''; cAudData=''; cAudMini.innerHTML=''; cAudM
 // ===== Editor renderers =====
 const optHost = document.getElementById('questionOptionsContainer');
 const qTypeSel = document.getElementById('questionType');
+const qForm = document.getElementById('questionForm');
+const newQuestionBtn = document.getElementById('newQuestion');
+const cancelEditBtn = document.getElementById('cancelEdit');
 
-function renderCategorySelect(selectedId){
-  const sel = el('select',{className:'form-select'});
+function showQuestionForm(){ if(qForm){ qForm.style.display='block'; newQuestionBtn.style.display='none'; } }
+function hideQuestionForm(){ if(qForm){ qForm.style.display='none'; newQuestionBtn.style.display='inline-block'; } }
+function resetEditorFields(){
+  document.getElementById('questionText').value='';
+  document.getElementById('questionComment').value='';
+  qImgData=qAudData=cImgData=cAudData='';
+  qImgPrev.style.display='none'; qImgClear.style.display='none';
+  qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none';
+  cImgPrev.style.display='none'; cImgClear.style.display='none';
+  cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none';
+  qTypeSel.value='single'; renderOptionsEditor();
+  renderCategorySelect(); const catSel=document.getElementById('categorySelect'); if(catSel) catSel.value='';
+}
 
-  // option: none
-  sel.appendChild(el('option',{value:''}, '(no category)'));
+newQuestionBtn.onclick=()=>{
+  editingIndex=-1;
+  resetEditorFields();
+  showQuestionForm();
+  qForm.scrollIntoView({behavior:'smooth'});
+};
 
-  // option: new
-  sel.appendChild(el('option',{value:'__new__'}, '➕ New...'));
+cancelEditBtn.onclick=()=>{
+  editingIndex=-1;
+  resetEditorFields();
+  hideQuestionForm();
+};
+// ===== Categories / Topics (no global `quiz` needed) =====
+// Simple slug from a label (for stable IDs)
+function slugFromLabel(str){
+  return String(str||'cat')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'') || 'cat';
+}
 
-  // existing categories from quiz.categories
-  const cats = quiz.categories || {};
-  Object.keys(cats).forEach(id=>{
-    sel.appendChild(el('option',{value:id, selected:(id===selectedId)}, cats[id]));
+// Rebuilds the <select id="categorySelect">; adds a "New…" option that opens inline UI
+function renderCategorySelect(){
+  const sel = document.getElementById('categorySelect');
+  const ui  = document.getElementById('categoryNewUI');
+  if(!sel) return;
+
+  const prev = sel.value;
+  sel.innerHTML = '';
+
+  sel.appendChild(new Option('— none —',''));
+  (meta.categories||[]).forEach(c=>{
+    const label = (c.labels && (c.labels[settings?.lang || 'en'] || c.id)) || c.id;
+    sel.appendChild(new Option(label, c.id));
   });
+  sel.appendChild(new Option('➕ New…','__new__'));
 
-  // handle "new" creation
+  // restore previous selection if still present
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
+
+  // hook: show inline creator when "New…" is chosen
   sel.onchange = ()=>{
-    if(sel.value==='__new__'){
-      const label = prompt('Enter new category/topic name:');
-      if(label && label.trim()){
-        const newId = 'cat'+Date.now();
-        if(!quiz.categories) quiz.categories={};
-        quiz.categories[newId]=label.trim();
-        // replace current select with updated version
-        const newSel = renderCategorySelect(newId);
-        sel.replaceWith(newSel);
-      } else {
-        sel.value='';
-      }
+    if(sel.value === '__new__'){
+      showNewCategoryUI();
+    } else if(ui){
+      ui.style.display = 'none';
+      ui.innerHTML = '';
     }
   };
-
-  return sel;
 }
+
+// Inline "create new category" UI shown under the select
+function showNewCategoryUI(){
+  const ui = document.getElementById('categoryNewUI');
+  const sel = document.getElementById('categorySelect');
+  if(!ui || !sel) return;
+
+  ui.style.display = 'block';
+  ui.innerHTML = '';
+
+  const lang = (settings && settings.lang) || 'en';
+  const nameIn = el('input',{type:'text', placeholder: lang==='de'?'Neuer Kategoriename':'New category name'});
+  const idIn   = el('input',{type:'text', placeholder:'id (auto from name)'});
+  const create = el('button',{className:'btn btn-primary'}, lang==='de'?'Erstellen':'Create');
+  const cancel = el('button',{className:'btn btn-ghost'}, lang==='de'?'Abbrechen':'Cancel');
+
+  // auto-suggest id from name if empty
+  nameIn.oninput = ()=>{ if(!idIn.value.trim()) idIn.value = slugFromLabel(nameIn.value); };
+
+  create.onclick = ()=>{
+    const label = nameIn.value.trim();
+    const id    = (idIn.value.trim() || slugFromLabel(label));
+    if(!label){ alert(lang==='de'?'Bitte Namen eingeben':'Please enter a name'); return; }
+    if(!meta.categories) meta.categories = [];
+    if(meta.categories.some(c=>c.id===id)){ alert(lang==='de'?'ID existiert bereits':'ID already exists'); return; }
+
+    // create with current language label (you can fill others later in Settings)
+    const labels = { en:'', de:'' };
+    labels[lang] = label;
+
+    meta.categories.push({ id, labels });
+    saveMeta();
+
+    renderCategorySelect();
+    sel.value = id; // select the new one
+    ui.style.display = 'none';
+    ui.innerHTML = '';
+  };
+
+  cancel.onclick = ()=>{
+    ui.style.display = 'none';
+    ui.innerHTML = '';
+    // revert selection back to none
+    if(sel.value === '__new__') sel.value = '';
+  };
+
+  ui.append(el('div',{className:'row'}, nameIn, idIn, create, cancel));
+}
+
+// (Optional) categories manager for Settings, if you have a <div id="catsManager">
+function renderCategoriesManager(){
+  const host = document.getElementById('catsManager');
+  if(!host) return;
+  host.innerHTML = '';
+
+  host.appendChild(el('div',{className:'muted'}, 'Define categories/topics. Each has an id and labels per language.'));
+  const list = el('div',{}); host.appendChild(list);
+
+  (meta.categories||[]).forEach((c,idx)=>{
+    const row = el('div',{className:'row'});
+    const idIn = el('input',{type:'text',value:c.id,placeholder:'id'});
+    const enIn = el('input',{type:'text',value:c.labels?.en||'',placeholder:'English label'});
+    const deIn = el('input',{type:'text',value:c.labels?.de||'',placeholder:'Deutsch'});
+    const del  = el('button',{className:'btn btn-ghost',onclick:()=>{
+      meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
+    }},'Remove');
+
+    idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
+    enIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.en = enIn.value; saveMeta(); renderCategorySelect(); };
+    deIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.de = deIn.value; saveMeta(); renderCategorySelect(); };
+
+    row.append(idIn,enIn,deIn,del);
+    list.appendChild(row);
+  });
+
+  const add = el('button',{className:'btn'}, '➕ Add category');
+  add.onclick = ()=>{
+    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), labels:{en:'',de:''} });
+    saveMeta(); renderCategoriesManager(); renderCategorySelect();
+  };
+  host.appendChild(add);
+}
+
+// Initialize the dropdown at load:
+document.addEventListener('DOMContentLoaded', renderCategorySelect);
 
 // Small helpers
 function mediaPickers(hostRow, init={}){
   const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
   const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
+  const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
   const iBtn=el('button',{className:'chip',type:'button'},'🖼️');
   const aBtn=el('button',{className:'chip',type:'button'},'🔈');
+  const vBtn=el('button',{className:'chip',type:'button'},'📹');
   const prev=el('span',{});
   if(init.image){ prev.appendChild(el('img',{src:init.image,className:'thumb'})); hostRow.dataset.img=init.image; }
   if(init.audio){ prev.appendChild(miniAudio(init.audio,'Audio')); hostRow.dataset.aud=init.audio; }
+  if(init.video){ prev.appendChild(miniVideo(init.video)); hostRow.dataset.vid=init.video; }
   iBtn.onclick=()=>iFile.click();
   aBtn.onclick=()=>aFile.click();
+  vBtn.onclick=()=>vFile.click();
   iFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); hostRow.dataset.img=d; const old=prev.querySelector('img'); if(old) old.remove(); prev.prepend(el('img',{src:d,className:'thumb'})); };
   aFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); hostRow.dataset.aud=d; const old=prev.querySelector('.chip'); if(old) old.remove(); prev.appendChild(miniAudio(d,'Audio')); };
-  return [iBtn,aBtn,iFile,aFile,prev];
+  vFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); hostRow.dataset.vid=d; const old=prev.querySelector('video'); if(old) old.remove(); prev.appendChild(miniVideo(d)); };
+  return [iBtn,aBtn,vBtn,iFile,aFile,vFile,prev];
 }
 
 function answerRow(type, valueObj={}, idx, data){
@@ -308,7 +443,7 @@ function answerRow(type, valueObj={}, idx, data){
   if(type==='multiple' && Array.isArray(data.corrects) && data.corrects.includes(idx)) correct.checked=true;
   const txt=el('input',{type:'text',placeholder:`Answer ${idx+1}`,value:valueObj.text||''});
   const hint=el('input',{type:'text',placeholder:'Hint (optional)',value:valueObj.hint||''});
-  const mediaRow=el('span',{}); mediaPickers(mediaRow,{image:valueObj.image||'',audio:valueObj.audio||''}).forEach(n=>mediaRow.appendChild(n));
+  const mediaRow=el('span',{}); mediaPickers(mediaRow,{image:valueObj.image||'',audio:valueObj.audio||'',video:valueObj.video||''}).forEach(n=>mediaRow.appendChild(n));
   const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
   row.append(correct,txt,hint,mediaRow,del);
   return row;
@@ -319,19 +454,19 @@ function pairRow(p){ const r=el('div',{className:'row pair'});
   const left=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
   const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
   const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
-  const lMedia=el('span',{}); mediaPickers(lMedia,{image:p.left?.image||'',audio:p.left?.audio||''}).forEach(n=>lMedia.appendChild(n));
+  const lMedia=el('span',{}); mediaPickers(lMedia,{image:p.left?.image||'',audio:p.left?.audio||'',video:p.left?.video||''}).forEach(n=>lMedia.appendChild(n));
   left.append(el('label',{},'Left'),lText,lHint,lMedia);
   // RIGHT
   const right=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
   const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
   const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
-  const rMedia=el('span',{}); mediaPickers(rMedia,{image:p.right?.image||'',audio:p.right?.audio||''}).forEach(n=>rMedia.appendChild(n));
+  const rMedia=el('span',{}); mediaPickers(rMedia,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rMedia.appendChild(n));
   right.append(el('label',{},'Right'),rText,rHint,rMedia);
   const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
   r.append(left,right,del);
   return r;
 }
-function orderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const m=el('span',{}); mediaPickers(m,{image:o.image||'',audio:o.audio||''}).forEach(n=>m.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,m,d); return r; }
+function orderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const m=el('span',{}); mediaPickers(m,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>m.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,m,d); return r; }
 
 function renderOptionsEditor(data={}){
   if(!optHost||!qTypeSel) return; optHost.innerHTML='';
@@ -380,7 +515,7 @@ function collectQuestion(){
   const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
   if(type==='single' || type==='multiple'){
     const rows=[...optHost.querySelectorAll('#answersList .arow')];
-    const answers=rows.map(r=>({text:r.querySelector('input[type="text"]').value.trim(), image:r.dataset.img||'', audio:r.dataset.aud||''})).filter(a=>a.text||a.image||a.audio);
+    const answers=rows.map(r=>({text:r.querySelector('input[type="text"]').value.trim(), image:r.dataset.img||'', audio:r.dataset.aud||'', video:r.dataset.vid||''})).filter(a=>a.text||a.image||a.audio||a.video);
     if(type==='single'){ const idx=rows.findIndex(r=> r.querySelector('input[type="radio"]').checked); Object.assign(q,{answers,correct:idx}); }
     else { const corrects=rows.map((r,i)=> r.querySelector('input[type="checkbox"]').checked? i : -1).filter(i=>i!==-1); Object.assign(q,{answers,corrects}); }
   }
@@ -395,17 +530,17 @@ function collectQuestion(){
       const rText=rightWrap.querySelector('input[type="text"]').value.trim();
       const rMedia=rightWrap.querySelector('.row');
       return {
-        left:{text:lText, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||''},
-        right:{text:rText, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||''}
+        left:{text:lText, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||'', video:lMedia?.dataset?.vid||''},
+        right:{text:rText, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||'', video:rMedia?.dataset?.vid||''}
       };
-    }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.right.text||p.right.image||p.right.audio));
+    }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.left.video||p.right.text||p.right.image||p.right.audio||p.right.video));
   }
   if(type==='order'){
     q.sequence=[...optHost.querySelectorAll('#orderList .order-row')].map(r=>{
       const t=r.querySelector('input[type="text"]').value.trim();
       const m=r.querySelector('.row');
-      return { text:t, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'' };
-    }).filter(it=> it.text||it.image||it.audio);
+      return { text:t, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'', video:m?.dataset?.vid||'' };
+    }).filter(it=> it.text||it.image||it.audio||it.video);
   }
   return q;
 }
@@ -413,6 +548,7 @@ function collectQuestion(){
 // Load into editor (incl. media)
 function loadIntoEditor(q){
   document.getElementById('questionText').value=q.question||'';
+  document.getElementById('questionComment').value=q.comment||'';
   qImgData=q.questionMedia?.image||''; qAudData=q.questionMedia?.audio||''; cImgData=q.commentMedia?.image||''; cAudData=q.commentMedia?.audio||'';
   if(qImgData){ qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; } else { qImgPrev.style.display='none'; qImgClear.style.display='none'; }
   if(qAudData){ qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; } else { qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; }
@@ -428,7 +564,7 @@ function renderQuestionList(){
   questions.forEach((q,i)=>{
     const li=el('li',{className:'question-item'}, q.question||'(untitled)');
     const actions=el('div',{className:'question-actions'});
-    const edit=el('button',{},'✏️'); edit.onclick=()=>{ editingIndex=i; loadIntoEditor(q); };
+    const edit=el('button',{},'✏️'); edit.onclick=()=>{ editingIndex=i; showQuestionForm(); loadIntoEditor(q); qForm.scrollIntoView({behavior:'smooth'}); };
     const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
     actions.append(edit,del); li.append(actions); ul.append(li);
   });
@@ -454,14 +590,18 @@ document.getElementById('saveQuestion').onclick=()=>{
   if(editingIndex>=0){ questions[editingIndex]=q; editingIndex=-1; }
   else questions.push(q);
   localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList();
-  document.getElementById('questionText').value=''; document.getElementById('questionComment').value=''; qImgData=qAudData=cImgData=cAudData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; cImgPrev.style.display='none'; cImgClear.style.display='none'; cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; renderOptionsEditor();
+  resetEditorFields();
+  hideQuestionForm();
 };
 
 function saveReorder(){ const ul=document.getElementById('questionList'); const titles=[...ul.children].map(li=>li.childNodes[0].nodeValue.trim()); const map=titles.map(t=> questions.find(q=>q.question===t)); questions=map; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); }
 
 // ===== Settings =====
 function applySettingsToUI(){
-  document.getElementById('feedbackSelect').value=settings.feedback; document.getElementById('showComments').checked=settings.showComments; document.getElementById('autoValidate').checked=settings.autoValidate;
+  document.getElementById('feedbackSelect').value=settings.feedback;
+  document.getElementById('showComments').checked=settings.showComments;
+  document.getElementById('linkifyComments').checked=settings.linkifyComments;
+  document.getElementById('autoValidate').checked=settings.autoValidate;
   document.getElementById('themeSelect').value=settings.theme; document.body.setAttribute('data-theme', settings.theme);
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
@@ -473,8 +613,9 @@ applySettingsToUI();
 
 document.getElementById('saveSettings').onclick=()=>{ 
   settings.feedback=document.getElementById('feedbackSelect').value; 
-  settings.showComments=document.getElementById('showComments').checked; 
-  settings.autoValidate=document.getElementById('autoValidate').checked; 
+  settings.showComments=document.getElementById('showComments').checked;
+  settings.linkifyComments=document.getElementById('linkifyComments').checked;
+  settings.autoValidate=document.getElementById('autoValidate').checked;
   settings.theme=document.getElementById('themeSelect').value; 
   document.body.setAttribute('data-theme', settings.theme); 
   settings.lang=document.getElementById('langSelect').value; 
@@ -500,9 +641,6 @@ document.getElementById('saveSettings').onclick=()=>{
 const impFile=document.getElementById('importFile');
 document.getElementById('importBtn').onclick=()=> impFile.click();
 document.getElementById('exportBtn').onclick=()=> doExport();
-// Also wire tab buttons to act immediately
-const tabImp=document.getElementById('tab-import'); if(tabImp) tabImp.onclick=()=> impFile.click();
-const tabExp=document.getElementById('tab-export'); if(tabExp) tabExp.onclick=()=> doExport();
 
 function doExport(){ const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='quiz.json'; a.click(); }
 
@@ -590,15 +728,21 @@ function showCurrent(){
   else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
 }
 
-function proceed(ok, q){
+function proceed(ok, q, msg){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   if(settings.feedback==='immediate'){
-    const b=el('div',{className:'banner '+(ok?'ok':'err')}, ok? 'Correct' : 'Wrong');
+    const b=el('div',{className:'banner '+(ok?'ok':'err')}, ok? (msg||'Correct') : 'Wrong');
     if(!ok && settings.showCorrectImmediate){
       const corr=describeCorrect(q);
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
-    if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}, q.comment); if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);} 
+    if(settings.showComments && q.comment){
+      const c=el('div',{className:'muted'});
+      if(settings.linkifyComments){ c.innerHTML=linkify(q.comment); } else { c.textContent=q.comment; }
+      if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'})));
+      if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio'));
+      b.appendChild(c);
+    }
     qc.appendChild(b); qctrl.innerHTML=''; qctrl.appendChild(el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'));
   } else { nextQuestion(); }
   if(ok) __playState.correct++;
@@ -608,7 +752,7 @@ function nextQuestion(){ __playState.idx++; if(__playState.idx>=__playState.pool
 function finalize(){ const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls'); qc.innerHTML=''; qctrl.innerHTML=''; qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`)); }
 
 // Media-aware renderer for items
-function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??''); const img=(item?.image||''); const aud=(item?.audio||''); if(img) box.appendChild(el('img',{src:img,className:'thumb'})); if(text) box.appendChild(el('div',{}, text)); if(aud) box.appendChild(miniAudio(aud,'Play')); box.addEventListener('click',ev=> maybeSpeakItemText(text, ev.target)); return box; }
+function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??''); const img=(item?.image||''); const aud=(item?.audio||''); const vid=(item?.video||''); if(img) box.appendChild(el('img',{src:img,className:'thumb'})); if(text) box.appendChild(el('div',{}, text)); if(aud) box.appendChild(miniAudio(aud,'Play')); if(vid) box.appendChild(miniVideo(vid)); box.addEventListener('click',ev=> maybeSpeakItemText(text, ev.target)); return box; }
 
 // ===== Helpers for feedback =====
 function describeCorrect(q){
@@ -620,7 +764,11 @@ function describeCorrect(q){
       const idxs=q.corrects||[]; const texts=idxs.map(i=> q.answers?.[i]?.text||'(media)').filter(Boolean); return 'Correct answers: '+texts.join(', ');
     }
     if(q.type==='text'){
-      const acc=q.acceptable||[]; return acc.length? ('Acceptable: '+acc.join(', ')) : '';
+      const acc=q.acceptable||[];
+      if(!acc.length) return '';
+      const first=acc[0];
+      const txt=(typeof first==='string')? first : (first?.text||'');
+      return txt? ('Acceptable: '+txt) : '';
     }
     if(q.type==='matching'){
       const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return 'Pairs: '+lines.join(' | ');
@@ -643,6 +791,7 @@ function renderPlaySingle(q, qc, qctrl){
     if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
     if(a.text) box.appendChild(el('div',{}, a.text));
     if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
+    if(a.video) box.appendChild(miniVideo(a.video));
     if(a.hint){
       const hintBtn = el('button',{className:'chip',type:'button'},'💡');
       const hintText = el('span',{className:'muted',style:'display:none;margin-left:6px'}, a.hint);
@@ -669,6 +818,7 @@ function renderPlayMultiple(q, qc, qctrl){
     row.append(chk,label);
     if(a.image) row.appendChild(el('img',{src:a.image,className:'thumb'}));
     if(a.audio) row.appendChild(miniAudio(a.audio,'Play'));
+    if(a.video) row.appendChild(miniVideo(a.video));
     if(a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
     if(settings.autoTTSItems && a.text) row.onclick=()=>speak(a.text);
     qc.appendChild(row);
@@ -707,11 +857,36 @@ function renderPlayText(q, qc, qctrl){
     qc.append(hBtn,hTxt);
   }
 
-  const check = ()=>{ const u = normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
+  let submitted=false;
+  const primary=acceptable[0]?.text||'';
+  const rangeRaw=acceptable[1]?.text||'';
+  const rangeMatch=/^\s*\[\s*(-?\d+)\s*,\s*(-?\d+)\s*\]\s*$/.exec(rangeRaw);
+  const others=acceptable.filter((_,i)=> !(rangeMatch && i===1));
+
+  const handle=()=>{
+    if(submitted) return;
+    submitted=true;
+    const val=inp.value.trim();
+    const norm=normalizeText(val);
+    const isPrimary = normalizeText(primary)===norm;
+    let ok=false; let msg;
+    if(isPrimary){ ok=true; }
+    else if(rangeMatch){
+      const num=parseInt(val,10);
+      const a=parseInt(rangeMatch[1],10), b=parseInt(rangeMatch[2],10);
+      if(!isNaN(num) && num>=a && num<=b){ ok=true; msg='Good guess'; }
+      else { ok=others.some(aObj=> normalizeText(aObj.text)===norm); }
+    } else {
+      ok=others.some(aObj=> normalizeText(aObj.text)===norm);
+    }
+    proceed(ok, q, msg);
+    inp.disabled=true; s.disabled=true;
+  };
+
   const s = el('button',{className:'btn btn-primary'}, 'Submit');
-  s.onclick = ()=> proceed(check(), q);
+  s.onclick = handle;
   qctrl.appendChild(s);
-  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ proceed(check(), q); }});
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ handle(); }});
 }
 
 function renderPlayMatching(q, qc, qctrl){
@@ -729,6 +904,7 @@ function renderPlayMatching(q, qc, qctrl){
     if(obj.image) card.appendChild(el('img',{src:obj.image,className:'thumb'}));
     if(obj.text) card.appendChild(el('div',{},obj.text));
     if(obj.audio) card.appendChild(miniAudio(obj.audio,'Play'));
+    if(obj.video) card.appendChild(miniVideo(obj.video));
     if(obj.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; card.append(hb,ht); }
     leftCol.appendChild(card);
   });
@@ -738,6 +914,7 @@ function renderPlayMatching(q, qc, qctrl){
     if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'}));
     if(it.text) li.appendChild(el('div',{},it.text));
     if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
+    if(it.video) li.appendChild(miniVideo(it.video));
     if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); }
     li.draggable=true; addDragHandlers(li,rightCol); rightCol.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
@@ -753,12 +930,31 @@ function renderPlayOrder(q, qc, qctrl){
   const items=(q.sequence||[]).map((t,i)=> typeof t==='object'? Object.assign({key:String(i)},t) : {text:String(t||''), key:String(i)});
   const sh=shuffle(items.slice());
   const list=el('ul',{className:'sort-list'});
-  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
+  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
   qc.appendChild(list);
   const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
-function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; (q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).forEach(lbl=>{ qc.append(el('label',{},lbl), el('input',{type:'text'})); inputs.push(qc.lastChild); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); }
+function renderPlayMultiText(q, qc, qctrl){
+  const inputs=[];
+  (q.prompts&&q.prompts.length? q.prompts : [{text:'Answer 1'},{text:'Answer 2'}]).forEach(p=>{
+    const obj=(typeof p==='object'&&p)? p : {text:String(p||'')};
+    qc.appendChild(el('label',{}, obj.text||''));
+    const inp=el('input',{type:'text'});
+    qc.appendChild(inp);
+    inputs.push(inp);
+    if(obj.hint){
+      const hBtn=el('button',{className:'chip',type:'button'},'💡');
+      const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'}, obj.hint);
+      hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; };
+      qc.append(hBtn,hTxt);
+    }
+  });
+  const check=()=> inputs.every(i=> i.value.trim().length>0);
+  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  s.onclick=()=> proceed(check(), q);
+  qctrl.appendChild(s);
+}
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
@@ -774,18 +970,23 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     if(type==='single' && idx===(data.correct|0)) correct.checked=true;
     if(type==='multiple' && Array.isArray(data.corrects) && data.corrects.includes(idx)) correct.checked=true;
     const txt=el('input',{type:'text',placeholder:`Answer ${idx+1}`,value:valueObj.text||''});
-    const hint=el('input',{type:'text',placeholder:'Hint (optional)',value:valueObj.hint||'',dataset:{role:'hint'}});
+    const hint=el('input',{type:'text',placeholder:'Hint (optional)',value:valueObj.hint||''});
+    hint.dataset.role='hint';
     const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
     const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
+    const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
     const iBtn=el('button',{className:'chip',type:'button'},'🖼️'); iBtn.onclick=()=>iFile.click();
     const aBtn=el('button',{className:'chip',type:'button'},'🔈'); aBtn.onclick=()=>aFile.click();
+    const vBtn=el('button',{className:'chip',type:'button'},'📹'); vBtn.onclick=()=>vFile.click();
     const preview=el('span',{});
     if(valueObj.image){ preview.appendChild(el('img',{src:valueObj.image,className:'thumb'})); row.dataset.img=valueObj.image; }
     if(valueObj.audio){ preview.appendChild(miniAudio(valueObj.audio,'Audio')); row.dataset.aud=valueObj.audio; }
+    if(valueObj.video){ preview.appendChild(miniVideo(valueObj.video)); row.dataset.vid=valueObj.video; }
     iFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.img=d; const old=preview.querySelector('img'); if(old) old.remove(); preview.prepend(el('img',{src:d,className:'thumb'})); };
     aFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.aud=d; const old=preview.querySelector('.chip'); if(old) old.remove(); preview.appendChild(miniAudio(d,'Audio')); };
+    vFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.vid=d; const old=preview.querySelector('video'); if(old) old.remove(); preview.appendChild(miniVideo(d)); };
     const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
-    row.append(correct,txt,hint,iBtn,aBtn,iFile,aFile,preview,del);
+    row.append(correct,txt,hint,iBtn,aBtn,vBtn,iFile,aFile,vFile,preview,del);
     return row;
   }
   function buildTextRow(obj){ const o=(typeof obj==='object'&&obj)?obj:{text:obj||'',hint:''}; const r=el('div',{className:'row'}); const i=el('input',{type:'text',value:o.text||'',placeholder:'Text'}); const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(i,h,d); return r; }
@@ -794,16 +995,16 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     const lLabel=el('label',{},'Left');
     const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
     const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
-    const leftRow=el('div',{className:'row'}); leftRow.dataset.img=p.left?.image||''; leftRow.dataset.aud=p.left?.audio||'';
-    mediaPickers(leftRow,{image:p.left?.image||'',audio:p.left?.audio||''}).forEach(n=>leftRow.appendChild(n)); leftWrap.append(lLabel,lText,lHint,leftRow);
+    const leftRow=el('div',{className:'row'}); leftRow.dataset.img=p.left?.image||''; leftRow.dataset.aud=p.left?.audio||''; leftRow.dataset.vid=p.left?.video||'';
+    mediaPickers(leftRow,{image:p.left?.image||'',audio:p.left?.audio||'',video:p.left?.video||''}).forEach(n=>leftRow.appendChild(n)); leftWrap.append(lLabel,lText,lHint,leftRow);
     const rightWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
     const rLabel=el('label',{},'Right');
     const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
     const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
-    const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||'';
-    mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rLabel,rText,rHint,rightRow);
+    const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||''; rightRow.dataset.vid=p.right?.video||'';
+    mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rLabel,rText,rHint,rightRow);
     const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(leftWrap,rightWrap,del); return r; }
-  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
+  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
 
   function renderOptionsEditor_v2(data={}){
     const optHost=optHostRef; if(!optHost||!qTypeSelRef) return; optHost.innerHTML='';
@@ -855,8 +1056,8 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
       const answers=rows.map(r=>({
         text:r.querySelector('input[type="text"]').value.trim(),
         hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim(),
-        image:r.dataset.img||'', audio:r.dataset.aud||''
-      })).filter(a=>a.text||a.image||a.audio);
+        image:r.dataset.img||'', audio:r.dataset.aud||'', video:r.dataset.vid||''
+      })).filter(a=>a.text||a.image||a.audio||a.video);
       if(type==='single'){ const idx=rows.findIndex(r=> r.querySelector('input[type="radio"]').checked); Object.assign(q,{answers,correct:idx}); }
       else { const corrects=rows.map((r,i)=> r.querySelector('input[type="checkbox"]').checked? i : -1).filter(i=>i!==-1); Object.assign(q,{answers,corrects}); }
     }
@@ -881,28 +1082,20 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
         const rText=rightWrap.querySelector('input[placeholder="Right text"]').value.trim();
         const rHint=(rightWrap.querySelector('input[placeholder="Right hint (optional)"]')?.value||'').trim();
         const rMedia=rightWrap.querySelector('.row');
-        return { left:{text:lText, hint:lHint, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||''}, right:{text:rText, hint:rHint, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||''} };
-      }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.right.text||p.right.image||p.right.audio));
+        return { left:{text:lText, hint:lHint, image:lMedia?.dataset?.img||'', audio:lMedia?.dataset?.aud||'', video:lMedia?.dataset?.vid||''}, right:{text:rText, hint:rHint, image:rMedia?.dataset?.img||'', audio:rMedia?.dataset?.aud||'', video:rMedia?.dataset?.vid||''} };
+      }).filter(p=> (p.left.text||p.left.image||p.left.audio||p.left.video||p.right.text||p.right.image||p.right.audio||p.right.video));
     }
     if(type==='order'){
       q.sequence=[...optHostRef.querySelectorAll('#orderList .order-row')].map(r=>{
         const t=r.querySelector('input[placeholder="Item text"]').value.trim();
         const h=(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim();
         const m=r.querySelector('.row');
-        return { text:t, hint:h, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'' };
-      }).filter(it=> it.text||it.image||it.audio);
+        return { text:t, hint:h, image:m?.dataset?.img||'', audio:m?.dataset?.aud||'', video:m?.dataset?.vid||'' };
+      }).filter(it=> it.text||it.image||it.audio||it.video);
     }
     return q;
   };
 
-  // Override renderPlayText to accept acceptable objects
-  window.renderPlayText = function(q, qc, qctrl){
-    const inp=el('input',{type:'text',placeholder:'Your answer'}); qc.appendChild(inp);
-    const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? a : (a?.text||''));
-    const check=()=>{ const u=normalizeText(inp.value); const ok=acceptable.some(a=> normalizeText(a)===u ); return ok; };
-    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ proceed(check(),q); }});
-  };
 })();
 </script>
 </body>
