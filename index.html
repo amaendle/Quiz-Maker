@@ -50,50 +50,54 @@
 
   <section id="editor" class="tab-content">
     <h2>Edit Questions</h2>
+    <button id="newQuestion" class="btn">➕ New question</button>
 
-    <label>Question</label>
-    <input id="questionText" type="text" placeholder="Type your question" />
-    <div class="row" id="qMediaRow">
-      <input type="file" id="qImg" accept="image/*" style="display:none"/>
-      <input type="file" id="qAud" accept="audio/*" style="display:none"/>
-      <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
-      <img id="qImgPrev" class="thumb" style="display:none"/>
-      <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
-      <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
-      <span id="qAudMini" style="display:none"></span>
-      <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+    <div id="editorForm" style="display:none">
+      <label>Question</label>
+      <input id="questionText" type="text" placeholder="Type your question" />
+      <div class="row" id="qMediaRow">
+        <input type="file" id="qImg" accept="image/*" style="display:none"/>
+        <input type="file" id="qAud" accept="audio/*" style="display:none"/>
+        <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
+        <img id="qImgPrev" class="thumb" style="display:none"/>
+        <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
+        <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
+        <span id="qAudMini" style="display:none"></span>
+        <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+      </div>
+
+      <label>Type</label>
+      <select id="questionType">
+        <option value="single">Single Choice</option>
+        <option value="multiple">Multiple Choice</option>
+        <option value="text">Enter Answer (text)</option>
+        <option value="multitext">Multiple Text Inputs</option>
+        <option value="matching">Matching (drag right)</option>
+        <option value="order">Put in the right order</option>
+      </select>
+
+      <div id="questionOptionsContainer" style="margin-top:10px"></div>
+
+      <label>Comment (optional)</label>
+      <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
+      <div class="row" id="cMediaRow">
+        <input type="file" id="cImg" accept="image/*" style="display:none"/>
+        <input type="file" id="cAud" accept="audio/*" style="display:none"/>
+        <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
+        <img id="cImgPrev" class="thumb" style="display:none"/>
+        <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
+        <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
+        <span id="cAudMini" style="display:none"></span>
+        <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
+      </div>
+
+      <label>Category / Topic (optional)</label>
+      <select id="categorySelect"><option value="">— none —</option></select>
+      <div id="categoryNewUI" style="display:none;margin-top:8px"></div>
+
+      <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
+      <button id="cancelEdit" class="btn" type="button">Cancel</button>
     </div>
-
-    <label>Type</label>
-    <select id="questionType">
-      <option value="single">Single Choice</option>
-      <option value="multiple">Multiple Choice</option>
-      <option value="text">Enter Answer (text)</option>
-      <option value="multitext">Multiple Text Inputs</option>
-      <option value="matching">Matching (drag right)</option>
-      <option value="order">Put in the right order</option>
-    </select>
-
-    <div id="questionOptionsContainer" style="margin-top:10px"></div>
-
-    <label>Comment (optional)</label>
-    <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
-    <div class="row" id="cMediaRow">
-      <input type="file" id="cImg" accept="image/*" style="display:none"/>
-      <input type="file" id="cAud" accept="audio/*" style="display:none"/>
-      <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
-      <img id="cImgPrev" class="thumb" style="display:none"/>
-      <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
-      <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
-      <span id="cAudMini" style="display:none"></span>
-      <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
-    </div>
-
-    <label>Category / Topic (optional)</label>
-    <select id="categorySelect"><option value="">— none —</option></select>
-<div id="categoryNewUI" style="display:none;margin-top:8px"></div>
-
-    <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
 
     <h3 style="margin-top:18px">Saved Questions</h3>
     <ul id="questionList" style="list-style:none;padding-left:0"></ul>
@@ -508,6 +512,7 @@ function collectQuestion(){
 // Load into editor (incl. media)
 function loadIntoEditor(q){
   document.getElementById('questionText').value=q.question||'';
+  document.getElementById('questionComment').value=q.comment||'';
   qImgData=q.questionMedia?.image||''; qAudData=q.questionMedia?.audio||''; cImgData=q.commentMedia?.image||''; cAudData=q.commentMedia?.audio||'';
   if(qImgData){ qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; } else { qImgPrev.style.display='none'; qImgClear.style.display='none'; }
   if(qAudData){ qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; } else { qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; }
@@ -517,13 +522,42 @@ function loadIntoEditor(q){
   renderCategorySelect(); if(q.categoryId){ const sel=document.getElementById('categorySelect'); if(sel) sel.value=q.categoryId; }
 }
 
+function clearEditorFields(){
+  document.getElementById('questionText').value='';
+  document.getElementById('questionComment').value='';
+  qImg.value=''; qAud.value=''; cImg.value=''; cAud.value='';
+  qImgData=qAudData=cImgData=cAudData='';
+  qImgPrev.style.display='none'; qImgClear.style.display='none';
+  qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none';
+  cImgPrev.style.display='none'; cImgClear.style.display='none';
+  cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none';
+  const sel=document.getElementById('categorySelect'); if(sel) sel.value='';
+  qTypeSel.value='single';
+  renderOptionsEditor();
+  editingIndex=-1;
+}
+
+function showEditorForm(){
+  document.getElementById('editorForm').style.display='block';
+}
+
+function hideEditorForm(){
+  document.getElementById('editorForm').style.display='none';
+}
+
 // Save / list
 function renderQuestionList(){
   const ul=document.getElementById('questionList'); ul.innerHTML='';
   questions.forEach((q,i)=>{
     const li=el('li',{className:'question-item'}, q.question||'(untitled)');
     const actions=el('div',{className:'question-actions'});
-    const edit=el('button',{},'✏️'); edit.onclick=()=>{ editingIndex=i; loadIntoEditor(q); };
+    const edit=el('button',{},'✏️');
+    edit.onclick=()=>{
+      editingIndex=i;
+      loadIntoEditor(q);
+      showEditorForm();
+      document.getElementById('editor').scrollIntoView({behavior:'smooth'});
+    };
     const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
     actions.append(edit,del); li.append(actions); ul.append(li);
   });
@@ -546,10 +580,22 @@ document.getElementById('saveQuestion').onclick=()=>{
   if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert('Add at least one pair'); return; }
   if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert('Add at least two items'); return; }
   q.comment=document.getElementById('questionComment').value.trim();
-  if(editingIndex>=0){ questions[editingIndex]=q; editingIndex=-1; }
+  if(editingIndex>=0){ questions[editingIndex]=q; }
   else questions.push(q);
   localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList();
-  document.getElementById('questionText').value=''; document.getElementById('questionComment').value=''; qImgData=qAudData=cImgData=cAudData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; cImgPrev.style.display='none'; cImgClear.style.display='none'; cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; renderOptionsEditor();
+  clearEditorFields();
+  hideEditorForm();
+};
+
+document.getElementById('cancelEdit').onclick=()=>{
+  clearEditorFields();
+  hideEditorForm();
+};
+
+document.getElementById('newQuestion').onclick=()=>{
+  clearEditorFields();
+  showEditorForm();
+  document.getElementById('editor').scrollIntoView({behavior:'smooth'});
 };
 
 function saveReorder(){ const ul=document.getElementById('questionList'); const titles=[...ul.children].map(li=>li.childNodes[0].nodeValue.trim()); const map=titles.map(t=> questions.find(q=>q.question===t)); questions=map; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); }
