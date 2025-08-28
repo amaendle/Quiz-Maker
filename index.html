@@ -801,10 +801,15 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
   const exportBtn=document.getElementById('exportBtn');
   if(importBtn){ importBtn.onclick=()=> impFile.click(); }
   if(impFile){ impFile.onchange=(ev)=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ try{ const data=JSON.parse(e.target.result);
-    if(Array.isArray(data)) { questions=data; }
-    else if(data && Array.isArray(data.questions)) { questions=data.questions; meta.categories = Array.isArray(data.categories)? data.categories : (data.meta&&Array.isArray(data.meta.categories)? data.meta.categories : meta.categories); }
+    if(Array.isArray(data)) {
+      questions=data;
+    } else if(data && Array.isArray(data.questions)) {
+      questions=data.questions;
+      meta.categories = Array.isArray(data.categories)? data.categories : (data.meta&&Array.isArray(data.meta.categories)? data.meta.categories : meta.categories);
+    } else {
+      throw new Error('Invalid JSON');
+    }
     meta.categories = (meta.categories||[]).map(c=> c.label? c : {id:c.id, label:(c.labels?.en||c.labels?.de||c.id), hint:c.hint||''});
-    else throw new Error('Invalid JSON');
     localStorage.setItem('quizData', JSON.stringify(questions)); localStorage.setItem('quizMeta', JSON.stringify(meta));
     renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ✓'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
   }
