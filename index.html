@@ -34,6 +34,7 @@
   .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
   .chip[aria-pressed="true"]{background:#e8f5ff;border-color:#b3defc}
   .dragging-el{opacity:.7}
+  #catsPanel{overflow:hidden;max-height:0;transition:max-height .3s ease;margin-top:8px}
   body[data-theme='child'] input,body[data-theme='child'] select,body[data-theme='child'] .btn{font-size:20px;padding:14px;border-radius:18px}
 </style>
 </head>
@@ -130,11 +131,9 @@
       </select>
     </label>
     <h3>Feedback</h3>
-    <select id="feedbackSelect">
-      <option value="immediate">Immediate</option>
-      <option value="end">At end</option>
-      <option value="score">Score only</option>
-    </select>
+    <label><input type="checkbox" id="feedbackImmediate" checked> Immediate feedback</label>
+    <label><input type="checkbox" id="feedbackEnd"> Feedback details at end</label>
+    <label><input type="checkbox" id="showCorrectImmediate" checked> Show correct answer when wrong (immediate)</label>
     <label><input type="checkbox" id="showComments" checked> Show comments</label>
     <label><input type="checkbox" id="linkifyComments"> Linkify comment URLs</label>
     <h3>Validation</h3>
@@ -160,15 +159,12 @@
     <label><input type="checkbox" id="autoTTSQuestions"> Auto-TTS questions</label>
     <label><input type="checkbox" id="autoTTSItems"> Auto-TTS items/options</label>
 
-    <h3>Immediate feedback detail</h3>
-    <label><input type="checkbox" id="showCorrectImmediate" checked> Show correct answer when wrong (immediate)</label>
-
     <h3>Play mode</h3>
     <label><input type="checkbox" id="showCategory"> Show category during play</label>
     <label><input type="checkbox" id="allowSkip"> Allow skipping questions</label>
 
-    <h3>Categories / Topics / Mottos</h3>
-    <div id="catsManager"></div>
+    <h3><button id="catsToggle" class="btn" type="button">Categories / Topics / Mottos</button></h3>
+    <div id="catsPanel"><div id="catsManager"></div></div>
 
     <button id="saveSettings" class="btn btn-primary">Save settings</button>
     <span id="settingsSaved" style="display:none;margin-left:8px">Saved ✓</span>
@@ -181,7 +177,11 @@ let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
 let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
 function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
-  feedback:'immediate', showComments:true, linkifyComments:false, theme:'formal', lang:'en',
+  feedbackImmediate:true,
+  feedbackEnd:false,
+  showComments:true,
+  linkifyComments:false,
+  theme:'formal', lang:'en',
   random:false, randomCount:5, timeLimitSec:0,
   caseSensitive:false, ignorePunct:true, normalizeAccents:true, ignoreSpaces:true, regexFull:true,
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
@@ -189,6 +189,11 @@ let settings = Object.assign({
   showCategory:false,
   allowSkip:false
 }, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
+if('feedback' in settings){
+  settings.feedbackImmediate = settings.feedback === 'immediate';
+  settings.feedbackEnd = settings.feedback === 'end';
+  delete settings.feedback;
+}
 let editingIndex = -1; // -1 means create new
 function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(settings)); }
 
@@ -355,6 +360,7 @@ function showNewCategoryUI(){
 // (Optional) categories manager for Settings, if you have a <div id="catsManager">
 function renderCategoriesManager(){
   const host = document.getElementById('catsManager');
+  const panel = document.getElementById('catsPanel');
   if(!host) return;
   host.innerHTML = '';
 
@@ -362,13 +368,13 @@ function renderCategoriesManager(){
   const list = el('div',{}); host.appendChild(list);
 
   (meta.categories||[]).forEach((c,idx)=>{
-    const row = el('div',{className:'row'});
-    const idIn = el('input',{type:'text',value:c.id,placeholder:'id'});
-    const enIn = el('input',{type:'text',value:c.labels?.en||'',placeholder:'English label'});
-    const deIn = el('input',{type:'text',value:c.labels?.de||'',placeholder:'Deutsch'});
-    const del  = el('button',{className:'btn btn-ghost',onclick:()=>{
+    const row = el('div',{className:'row',style:'flex-wrap:nowrap;align-items:center'});
+    const idIn = el('input',{type:'text',value:c.id,placeholder:'id',style:'width:80px'});
+    const enIn = el('input',{type:'text',value:c.labels?.en||'',placeholder:'English label',style:'flex:1;width:auto'});
+    const deIn = el('input',{type:'text',value:c.labels?.de||'',placeholder:'Deutsch',style:'flex:1;width:auto'});
+    const del  = el('button',{className:'btn btn-ghost',title:'Remove',onclick:()=>{
       meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
-    }},'Remove');
+    }},'🗑️');
 
     idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
     enIn.oninput = ()=>{ c.labels = c.labels || {}; c.labels.en = enIn.value; saveMeta(); renderCategorySelect(); };
@@ -384,6 +390,7 @@ function renderCategoriesManager(){
     saveMeta(); renderCategoriesManager(); renderCategorySelect();
   };
   host.appendChild(add);
+  if(panel && panel.style.maxHeight && panel.style.maxHeight!=='0px') panel.style.maxHeight=panel.scrollHeight+'px';
 }
 
 // Initialize the dropdown at load:
@@ -612,7 +619,7 @@ function saveReorder(){ const ul=document.getElementById('questionList'); const 
 
 // ===== Settings =====
 function applySettingsToUI(){
-  document.getElementById('feedbackSelect').value=settings.feedback; document.getElementById('showComments').checked=settings.showComments; document.getElementById('linkifyComments').checked=settings.linkifyComments; document.getElementById('autoValidate').checked=settings.autoValidate;
+  document.getElementById('feedbackImmediate').checked=settings.feedbackImmediate; document.getElementById('feedbackEnd').checked=settings.feedbackEnd; document.getElementById('showComments').checked=settings.showComments; document.getElementById('linkifyComments').checked=settings.linkifyComments; document.getElementById('autoValidate').checked=settings.autoValidate;
   document.getElementById('themeSelect').value=settings.theme; document.body.setAttribute('data-theme', settings.theme);
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
@@ -623,23 +630,34 @@ function applySettingsToUI(){
 }
 applySettingsToUI();
 
-document.getElementById('saveSettings').onclick=()=>{ 
-  settings.feedback=document.getElementById('feedbackSelect').value;
+const catsToggle=document.getElementById('catsToggle');
+const catsPanel=document.getElementById('catsPanel');
+if(catsToggle && catsPanel){
+  catsToggle.onclick=()=>{
+    const open=catsPanel.style.maxHeight && catsPanel.style.maxHeight!=='0px';
+    if(open){ catsPanel.style.maxHeight='0'; }
+    else { catsPanel.style.maxHeight=catsPanel.scrollHeight+'px'; }
+  };
+}
+
+document.getElementById('saveSettings').onclick=()=>{
+  settings.feedbackImmediate=document.getElementById('feedbackImmediate').checked;
+  settings.feedbackEnd=document.getElementById('feedbackEnd').checked;
   settings.showComments=document.getElementById('showComments').checked;
   settings.linkifyComments=document.getElementById('linkifyComments').checked;
   settings.autoValidate=document.getElementById('autoValidate').checked;
-  settings.theme=document.getElementById('themeSelect').value; 
-  document.body.setAttribute('data-theme', settings.theme); 
-  settings.lang=document.getElementById('langSelect').value; 
-  settings.random=document.getElementById('randomMode').checked; 
-  settings.randomCount=parseInt(document.getElementById('randomCount').value||'0'); 
-  settings.timeLimitSec=parseInt(document.getElementById('timeLimitSec').value||'0'); 
-  settings.caseSensitive=document.getElementById('caseSensitive').checked; 
-  settings.ignorePunct=document.getElementById('ignorePunct').checked; 
-  settings.normalizeAccents=document.getElementById('normalizeAccents').checked; 
-  settings.ignoreSpaces=document.getElementById('ignoreSpaces').checked; 
-  settings.regexFull=document.getElementById('regexFull').checked; 
-  settings.mcqScore=document.getElementById('mcqScore').value; 
+  settings.theme=document.getElementById('themeSelect').value;
+  document.body.setAttribute('data-theme', settings.theme);
+  settings.lang=document.getElementById('langSelect').value;
+  settings.random=document.getElementById('randomMode').checked;
+  settings.randomCount=parseInt(document.getElementById('randomCount').value||'0');
+  settings.timeLimitSec=parseInt(document.getElementById('timeLimitSec').value||'0');
+  settings.caseSensitive=document.getElementById('caseSensitive').checked;
+  settings.ignorePunct=document.getElementById('ignorePunct').checked;
+  settings.normalizeAccents=document.getElementById('normalizeAccents').checked;
+  settings.ignoreSpaces=document.getElementById('ignoreSpaces').checked;
+  settings.regexFull=document.getElementById('regexFull').checked;
+  settings.mcqScore=document.getElementById('mcqScore').value;
   settings.autoTTSQuestions=document.getElementById('autoTTSQuestions').checked;
   settings.autoTTSItems=document.getElementById('autoTTSItems').checked;
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
@@ -678,14 +696,14 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
 function maybeSpeakItemText(text, target){ if(settings.autoTTSItems && text){ if(target && target.closest('.chip')) return; speak(text); } }
 
 // ===== Player =====
-let __playState={pool:[],idx:0,correct:0};
+let __playState={pool:[],idx:0,correct:0,results:[]};
 
 function startQuiz(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   qc.innerHTML=''; qctrl.innerHTML='';
   if(!questions.length){ qc.innerHTML='<p class="muted">No questions yet.</p>'; return; }
   __playState.pool = settings.random? shuffle(questions).slice(0, Math.max(1, settings.randomCount||questions.length)) : questions.slice();
-  __playState.idx=0; __playState.correct=0;
+  __playState.idx=0; __playState.correct=0; __playState.results=[];
   if(settings.timeLimitSec>0){ let remaining=settings.timeLimitSec; const t=el('div',{id:'timer'}, '⏱ '+remaining); qc.prepend(t); const id=setInterval(()=>{ remaining--; const elT=document.getElementById('timer'); if(elT) elT.textContent='⏱ '+remaining; if(remaining<=0){ clearInterval(id); finalize(); } },1000); }
   showCurrent();
 }
@@ -712,7 +730,8 @@ function showCurrent(){
 function proceed(ok, q, msg=''){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
-  if(settings.feedback==='immediate'){
+  __playState.results.push({q, ok});
+  if(settings.feedbackImmediate){
     const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? 'Correct' : 'Wrong'));
     if(!ok && settings.showCorrectImmediate){
       const corr=describeCorrect(q);
@@ -726,7 +745,27 @@ function proceed(ok, q, msg=''){
 
 function nextQuestion(){ __playState.idx++; if(__playState.idx>=__playState.pool.length) finalize(); else showCurrent(); }
 function skipQuestion(){ const q=__playState.pool.splice(__playState.idx,1)[0]; __playState.pool.push(q); showCurrent(); }
-function finalize(){ const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls'); qc.innerHTML=''; qctrl.innerHTML=''; qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`)); }
+function finalize(){
+  const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
+  qc.innerHTML=''; qctrl.innerHTML='';
+  qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`));
+  if(settings.feedbackEnd){
+    const list=el('ul',{style:'list-style:none;padding-left:0'});
+    __playState.results.forEach((r,i)=>{
+      const li=el('li',{}, `${i+1}. ${r.q.question}`);
+      li.appendChild(el('span',{className:'muted'}, r.ok?' ✓':' ✗'));
+      const corr=describeCorrect(r.q);
+      if(corr) li.appendChild(el('div',{className:'muted'}, corr));
+      if(settings.showComments && r.q.comment){
+        const c=el('div',{className:'muted'});
+        if(settings.linkifyComments) c.appendChild(linkifyText(r.q.comment)); else c.textContent=r.q.comment;
+        li.appendChild(c);
+      }
+      list.appendChild(li);
+    });
+    qc.appendChild(list);
+  }
+}
 
 // Media-aware renderer for items
 function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??''); const img=(item?.image||''); const aud=(item?.audio||''); const vid=(item?.video||''); if(img) box.appendChild(el('img',{src:img,className:'thumb'})); if(text) box.appendChild(el('div',{}, text)); if(aud) box.appendChild(miniAudio(aud,'Play')); if(vid) box.appendChild(miniVideo(vid)); box.addEventListener('click',ev=> maybeSpeakItemText(text, ev.target)); return box; }
@@ -817,7 +856,7 @@ function renderPlayMultiple(q, qc, qctrl){
     proceed(ok,q);
   };
   qctrl.appendChild(s);
-  addKeyHandler(e=>{ if(e.key>='1' && e.key<='9'){ const idx=parseInt(e.key,10)-1; if(checks[idx]) checks[idx].checked=!checks[idx].checked; } else if(e.key==='Enter'){ s.click(); } });
+  addKeyHandler(e=>{ if(e.key>='1' && e.key<='9'){ const idx=parseInt(e.key,10)-1; if(checks[idx]) checks[idx].checked=!checks[idx].checked; } else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } });
 }
 
 function renderPlayText(q, qc, qctrl){
@@ -837,7 +876,7 @@ function renderPlayText(q, qc, qctrl){
   const s = el('button',{className:'btn btn-primary'}, 'Submit');
   s.onclick = ()=> proceed(check(), q);
   qctrl.appendChild(s);
-  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ proceed(check(), q); }});
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); proceed(check(), q); }});
 }
 
 function renderPlayMatching(q, qc, qctrl){
@@ -886,7 +925,7 @@ function renderPlayOrder(q, qc, qctrl){
   const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
-function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach((p,idx)=>{ if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); addKeyHandler(e=>{ if(e.key==='Enter') s.click(); }); }
+function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach((p,idx)=>{ if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); addKeyHandler(e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } }); }
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
@@ -1071,7 +1110,7 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     function check(){ const val=inp.value; const norm=normalizeText(val); for(const a of acceptable){ if(normalizeText(a.text)===norm) return {ok:true}; let min,max; if(a.range&&Array.isArray(a.range)){min=parseFloat(a.range[0]); max=parseFloat(a.range[1]);} else { const m=/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/.exec(a.text); if(m){min=parseFloat(m[1]); max=parseFloat(m[2]);} } if(min!==undefined&&max!==undefined){ const num=parseFloat(val); if(!isNaN(num)&&num>=min&&num<=max) return {ok:false,close:true}; } } return {ok:false}; }
     function submit(){ if(submitted) return; submitted=true; inp.disabled=true; s.disabled=true; const res=check(); if(res.ok) proceed(true,q); else if(res.close) proceed(false,q,'Good guess'); else proceed(false,q); }
     const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=submit; qctrl.appendChild(s);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') submit(); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); submit(); } });
   };
 })();
 </script>
