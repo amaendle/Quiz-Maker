@@ -44,8 +44,6 @@
     <button id="tab-editor">✏️ Editor</button>
     <button id="tab-player">▶️ Play</button>
     <button id="tab-settings">⚙️ Settings</button>
-    <button id="tab-import">📂 Import</button>
-    <button id="tab-export">💾 Export</button>
   </div>
 
   <section id="editor" class="tab-content">
@@ -138,6 +136,7 @@
       <option value="score">Score only</option>
     </select>
     <label><input type="checkbox" id="showComments" checked> Show comments</label>
+    <label><input type="checkbox" id="linkifyComments"> Linkify comment URLs</label>
     <h3>Validation</h3>
     <label><input type="checkbox" id="autoValidate" checked> Validate automatically (default)</label>
     <h3>Random mode</h3>
@@ -178,7 +177,7 @@ let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
 let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
 function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
-  feedback:'immediate', showComments:true, theme:'formal', lang:'en',
+  feedback:'immediate', showComments:true, linkifyComments:false, theme:'formal', lang:'en',
   random:false, randomCount:5, timeLimitSec:0,
   caseSensitive:false, ignorePunct:true, normalizeAccents:true, ignoreSpaces:true, regexFull:true,
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
@@ -232,6 +231,7 @@ function normalizeText(s){
 const fileToDataURL=f=>new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);});
 function miniAudio(url,label='Play'){ const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','false'); b.textContent='🔈 '+label; const a=new Audio(url); b.onclick=()=>{ if(b.getAttribute('aria-pressed')==='true'){ a.pause(); a.currentTime=0; b.setAttribute('aria-pressed','false'); } else { a.play().catch(()=>{}); b.setAttribute('aria-pressed','true'); a.onended=()=>b.setAttribute('aria-pressed','false'); } }; return b; }
 function miniVideo(url){ const v=document.createElement('video'); v.src=url; v.controls=true; v.className='thumb'; return v; }
+function linkifyText(str){ const url=/https?:\/\/[^\s]+/g; const frag=document.createDocumentFragment(); let last=0; str=String(str||''); let m; while((m=url.exec(str))){ if(m.index>last) frag.appendChild(document.createTextNode(str.slice(last,m.index))); const a=document.createElement('a'); a.href=m[0]; a.target='_blank'; a.textContent=m[0]; frag.appendChild(a); last=m.index+m[0].length; } if(last<str.length) frag.appendChild(document.createTextNode(str.slice(last))); return frag; }
 
 // ===== Media pickers (question/comment) =====
 let qImgData='', qAudData='', cImgData='', cAudData='';
@@ -602,7 +602,7 @@ function saveReorder(){ const ul=document.getElementById('questionList'); const 
 
 // ===== Settings =====
 function applySettingsToUI(){
-  document.getElementById('feedbackSelect').value=settings.feedback; document.getElementById('showComments').checked=settings.showComments; document.getElementById('autoValidate').checked=settings.autoValidate;
+  document.getElementById('feedbackSelect').value=settings.feedback; document.getElementById('showComments').checked=settings.showComments; document.getElementById('linkifyComments').checked=settings.linkifyComments; document.getElementById('autoValidate').checked=settings.autoValidate;
   document.getElementById('themeSelect').value=settings.theme; document.body.setAttribute('data-theme', settings.theme);
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
@@ -613,9 +613,10 @@ function applySettingsToUI(){
 applySettingsToUI();
 
 document.getElementById('saveSettings').onclick=()=>{ 
-  settings.feedback=document.getElementById('feedbackSelect').value; 
-  settings.showComments=document.getElementById('showComments').checked; 
-  settings.autoValidate=document.getElementById('autoValidate').checked; 
+  settings.feedback=document.getElementById('feedbackSelect').value;
+  settings.showComments=document.getElementById('showComments').checked;
+  settings.linkifyComments=document.getElementById('linkifyComments').checked;
+  settings.autoValidate=document.getElementById('autoValidate').checked;
   settings.theme=document.getElementById('themeSelect').value; 
   document.body.setAttribute('data-theme', settings.theme); 
   settings.lang=document.getElementById('langSelect').value; 
@@ -635,45 +636,6 @@ document.getElementById('saveSettings').onclick=()=>{
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
   setTimeout(()=>s.style.display='none',1200);
-};
-
-// ===== Import / Export =====
-const impFile=document.getElementById('importFile');
-document.getElementById('importBtn').onclick=()=> impFile.click();
-document.getElementById('exportBtn').onclick=()=> doExport();
-// Also wire tab buttons to act immediately
-const tabImp=document.getElementById('tab-import'); if(tabImp) tabImp.onclick=()=> impFile.click();
-const tabExp=document.getElementById('tab-export'); if(tabExp) tabExp.onclick=()=> doExport();
-
-function doExport(){ const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='quiz.json'; a.click(); }
-
-impFile.onchange=(ev)=>{
-  const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=e=>{
-    try{
-      let data=JSON.parse(e.target.result);
-      if(!Array.isArray(data)) throw new Error('Top-level must be an array');
-      // normalize: strings -> {text}, order/matching shapes
-      data=data.map(q=>{
-        const out=Object.assign({}, q);
-        if(out.type==='order' && Array.isArray(out.sequence)){
-          out.sequence=out.sequence.map(x=> (typeof x==='string'? {text:x} : x));
-        }
-        if(out.type==='matching' && Array.isArray(out.pairs)){
-          out.pairs=out.pairs.map(p=>({
-            left: (typeof p.left==='string'? {text:p.left} : p.left||{text:''}),
-            right:(typeof p.right==='string'? {text:p.right}: p.right||{text:''})
-          }));
-        }
-        if(out.type==='single' || out.type==='multiple'){
-          out.answers=(out.answers||[]).map(a=> typeof a==='string'? {text:a}: a);
-        }
-        return out;
-      });
-      questions=data; localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); alert('Imported ✓');
-    }catch(err){ alert('Import failed: '+err.message); }
-  };
-  r.readAsText(f);
 };
 
 // ===== Tabs =====
@@ -731,15 +693,15 @@ function showCurrent(){
   else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
 }
 
-function proceed(ok, q){
+function proceed(ok, q, msg=''){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   if(settings.feedback==='immediate'){
-    const b=el('div',{className:'banner '+(ok?'ok':'err')}, ok? 'Correct' : 'Wrong');
+    const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? 'Correct' : 'Wrong'));
     if(!ok && settings.showCorrectImmediate){
       const corr=describeCorrect(q);
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
-    if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}, q.comment); if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);} 
+    if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}); if(settings.linkifyComments) c.appendChild(linkifyText(q.comment)); else c.textContent=q.comment; if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);}
     qc.appendChild(b); qctrl.innerHTML=''; qctrl.appendChild(el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'));
   } else { nextQuestion(); }
   if(ok) __playState.correct++;
@@ -761,7 +723,7 @@ function describeCorrect(q){
       const idxs=q.corrects||[]; const texts=idxs.map(i=> q.answers?.[i]?.text||'(media)').filter(Boolean); return 'Correct answers: '+texts.join(', ');
     }
     if(q.type==='text'){
-      const acc=q.acceptable||[]; return acc.length? ('Acceptable: '+acc.join(', ')) : '';
+      const acc=q.acceptable||[]; const first=acc[0]; if(!first) return ''; const txt= typeof first==='object'? first.text : first; return 'Acceptable: '+txt;
     }
     if(q.type==='matching'){
       const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return 'Pairs: '+lines.join(' | ');
@@ -903,7 +865,7 @@ function renderPlayOrder(q, qc, qctrl){
   const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
-function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; (q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).forEach(lbl=>{ qc.append(el('label',{},lbl), el('input',{type:'text'})); inputs.push(qc.lastChild); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); }
+function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach(p=>{ const lbl=el('label',{},p.text||''); qc.appendChild(lbl); if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text'}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); }
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
@@ -1048,10 +1010,14 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
   // Override renderPlayText to accept acceptable objects
   window.renderPlayText = function(q, qc, qctrl){
     const inp=el('input',{type:'text',placeholder:'Your answer'}); qc.appendChild(inp);
-    const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? a : (a?.text||''));
-    const check=()=>{ const u=normalizeText(inp.value); const ok=acceptable.some(a=> normalizeText(a)===u ); return ok; };
-    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ proceed(check(),q); }});
+    const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
+    const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
+    if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
+    let submitted=false;
+    function check(){ const val=inp.value; const norm=normalizeText(val); for(const a of acceptable){ if(normalizeText(a.text)===norm) return {ok:true}; let min,max; if(a.range&&Array.isArray(a.range)){min=parseFloat(a.range[0]); max=parseFloat(a.range[1]);} else { const m=/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/.exec(a.text); if(m){min=parseFloat(m[1]); max=parseFloat(m[2]);} } if(min!==undefined&&max!==undefined){ const num=parseFloat(val); if(!isNaN(num)&&num>=min&&num<=max) return {ok:false,close:true}; } } return {ok:false}; }
+    function submit(){ if(submitted) return; submitted=true; inp.disabled=true; s.disabled=true; const res=check(); if(res.ok) proceed(true,q); else if(res.close) proceed(false,q,'Good guess'); else proceed(false,q); }
+    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=submit; qctrl.appendChild(s);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') submit(); });
   };
 })();
 </script>
