@@ -738,7 +738,14 @@ function proceed(ok, q, msg=''){
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
     }
     if(settings.showComments && q.comment){ const c=el('div',{className:'muted'}); if(settings.linkifyComments) c.appendChild(linkifyText(q.comment)); else c.textContent=q.comment; if(q.commentMedia?.image) c.appendChild(el('div',{}, el('img',{src:q.commentMedia.image,className:'thumb'}))); if(q.commentMedia?.audio) c.appendChild(miniAudio(q.commentMedia.audio,'Comment audio')); b.appendChild(c);}
-    qc.appendChild(b); qctrl.innerHTML=''; const nx=el('button',{className:'btn btn-primary',onclick:nextQuestion}, 'Next'); qctrl.appendChild(nx); addKeyHandler(e=>{ if(e.key==='Enter') nextQuestion(); });
+    qc.appendChild(b);
+    qctrl.innerHTML='';
+    let advanced=false;
+    const go=()=>{ if(advanced) return; advanced=true; nextQuestion(); };
+    const nx=el('button',{className:'btn btn-primary',onclick:go}, 'Next');
+    qctrl.appendChild(nx);
+    nx.focus();
+    addKeyHandler(e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); go(); } });
   } else { nextQuestion(); }
   if(ok) __playState.correct++;
 }
@@ -925,7 +932,37 @@ function renderPlayOrder(q, qc, qctrl){
   const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
-function renderPlayMultiText(q, qc, qctrl){ const inputs=[]; const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p); prompts.forEach((p,idx)=>{ if(p.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; qc.append(hb,ht); } const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`}); qc.appendChild(inp); inputs.push(inp); }); const check=()=> inputs.every(i=> i.value.trim().length>0); const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(check(), q); qctrl.appendChild(s); addKeyHandler(e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } }); }
+function renderPlayMultiText(q, qc, qctrl){
+  const inputs=[];
+  const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p);
+  prompts.forEach((p,idx)=>{
+    if(p.hint){
+      const hb=el('button',{className:'chip',type:'button'},'💡');
+      const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint);
+      hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
+      qc.append(hb,ht);
+    }
+    const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`});
+    qc.appendChild(inp);
+    inputs.push(inp);
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        e.stopPropagation();
+        if(idx<inputs.length-1){
+          inputs[idx+1].focus();
+        } else {
+          s.click();
+        }
+      }
+    });
+  });
+  if(inputs[0]) inputs[0].focus();
+  const check=()=> inputs.every(i=> i.value.trim().length>0);
+  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  s.onclick=()=> proceed(check(), q);
+  qctrl.appendChild(s);
+}
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
@@ -1102,13 +1139,40 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
 
   // Override renderPlayText to accept acceptable objects
   window.renderPlayText = function(q, qc, qctrl){
-    const inp=el('input',{type:'text',placeholder:'Your answer'}); qc.appendChild(inp);
+    const inp=el('input',{type:'text',placeholder:'Your answer'});
+    qc.appendChild(inp);
+    inp.focus();
     const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
     const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
     if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
     let submitted=false;
-    function check(){ const val=inp.value; const norm=normalizeText(val); for(const a of acceptable){ if(normalizeText(a.text)===norm) return {ok:true}; let min,max; if(a.range&&Array.isArray(a.range)){min=parseFloat(a.range[0]); max=parseFloat(a.range[1]);} else { const m=/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/.exec(a.text); if(m){min=parseFloat(m[1]); max=parseFloat(m[2]);} } if(min!==undefined&&max!==undefined){ const num=parseFloat(val); if(!isNaN(num)&&num>=min&&num<=max) return {ok:false,close:true}; } } return {ok:false}; }
-    function submit(){ if(submitted) return; submitted=true; inp.disabled=true; s.disabled=true; const res=check(); if(res.ok) proceed(true,q); else if(res.close) proceed(false,q,'Good guess'); else proceed(false,q); }
+    function check(){
+      const val=inp.value.trim();
+      const norm=normalizeText(val);
+      for(const a of acceptable){
+        if(normalizeText(a.text)===norm) return {ok:true};
+      }
+      if(acceptable.length>=2){
+        const firstInt=parseInt(acceptable[0].text,10);
+        if(String(firstInt)===normalizeText(acceptable[0].text)){
+          const second=acceptable[1];
+          let min,max;
+          if(second.range&&Array.isArray(second.range)){
+            min=parseFloat(second.range[0]);
+            max=parseFloat(second.range[1]);
+          } else {
+            const m=/^(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)$/.exec(second.text||'');
+            if(m){ min=parseFloat(m[1]); max=parseFloat(m[2]); }
+          }
+          const num=parseInt(val,10);
+          if(!isNaN(num)&&min!==undefined&&max!==undefined&&num>=min&&num<=max&&num!==firstInt){
+            return {ok:true,msg:'Good guess'};
+          }
+        }
+      }
+      return {ok:false};
+    }
+    function submit(){ if(submitted) return; submitted=true; inp.disabled=true; s.disabled=true; const res=check(); if(res.ok) proceed(true,q,res.msg||''); else proceed(false,q); }
     const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=submit; qctrl.appendChild(s);
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); submit(); } });
   };
