@@ -20,12 +20,13 @@
   .btn-primary{background:var(--accent);border:none;color:#fff}
   .btn-ghost{background:transparent;border:1px dashed #b9cadd}
   .muted{color:var(--muted)}
-  .question-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 60px 10px 10px;margin:8px 0;cursor:grab;position:relative;display:flex;align-items:center}
+  .question-item{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 100px 10px 10px;margin:8px 0;cursor:grab;position:relative;display:flex;align-items:center}
   .question-item.dragging{opacity:.7}
   .q-title{flex:1}
   .tiny-thumb{width:24px;height:24px;object-fit:cover;margin-left:6px;border-radius:4px;vertical-align:middle}
   .media-icon{margin-left:6px;font-size:18px;vertical-align:middle}
   .question-actions{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+  .q-content{display:flex;align-items:center;gap:6px}
   .banner{padding:10px 12px;border-radius:10px;margin-top:12px}
   .banner.ok{background:#e8f5e9;color:#1b5e20;border:1px solid #b7e1c0}
   .banner.err{background:#ffebee;color:#b71c1c;border:1px solid #f3b0b5}
@@ -197,6 +198,12 @@ if('feedback' in settings){
   settings.feedbackEnd = settings.feedback === 'end';
   delete settings.feedback;
 }
+document.documentElement.lang = settings.lang || 'en';
+const STRINGS={
+  en:{submit:'Submit',next:'Next',skip:'Skip',correct:'Correct',wrong:'Wrong',time:'Time\'s up!',score:'Score',answers:'Answers'},
+  de:{submit:'Senden',next:'Weiter',skip:'Überspringen',correct:'Richtig',wrong:'Falsch',time:'Zeit abgelaufen!',score:'Punkte',answers:'Antworten'}
+};
+function t(k){ const lang=settings.lang||'en'; return (STRINGS[lang]&&STRINGS[lang][k])||STRINGS.en[k]||k; }
 let editingIndex = -1; // -1 means create new
 function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(settings)); }
 
@@ -570,10 +577,12 @@ function renderQuestionList(){
   const ul=document.getElementById('questionList'); ul.innerHTML='';
   questions.forEach((q,i)=>{
     const li=el('li',{className:'question-item'});
+    const content=el('div',{className:'q-content'});
     const title=el('span',{className:'q-title'}, q.question||'(untitled)');
-    li.append(title);
-    if(q.questionMedia?.image){ li.appendChild(el('img',{src:q.questionMedia.image,className:'tiny-thumb'})); }
-    if(q.questionMedia?.audio){ li.appendChild(el('span',{className:'media-icon'},'🔈')); }
+    content.append(title);
+    if(q.questionMedia?.image){ content.appendChild(el('img',{src:q.questionMedia.image,className:'tiny-thumb'})); }
+    if(q.questionMedia?.audio){ content.appendChild(el('span',{className:'media-icon'},'🔈')); }
+    li.append(content);
     const actions=el('div',{className:'question-actions'});
     const edit=el('button',{},'✏️');
     edit.onclick=()=>{
@@ -670,6 +679,7 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
   settings.showCategory=document.getElementById('showCategory').checked;
   settings.allowSkip=document.getElementById('allowSkip').checked;
+  document.documentElement.lang = settings.lang || 'en';
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
@@ -703,7 +713,7 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
 function maybeSpeakItemText(text, target){ if(settings.autoTTSItems && text){ if(target && target.closest('.chip')) return; speak(text); } }
 
 // ===== Player =====
-let __playState={pool:[],idx:0,correct:0,results:[]};
+let __playState={pool:[],idx:0,correct:0,results:[],timerId:null};
 
 function startQuiz(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
@@ -711,7 +721,6 @@ function startQuiz(){
   if(!questions.length){ qc.innerHTML='<p class="muted">No questions yet.</p>'; return; }
   __playState.pool = settings.random? shuffle(questions).slice(0, Math.max(1, settings.randomCount||questions.length)) : questions.slice();
   __playState.idx=0; __playState.correct=0; __playState.results=[];
-  if(settings.timeLimitSec>0){ let remaining=settings.timeLimitSec; const t=el('div',{id:'timer'}, '⏱ '+remaining); qc.prepend(t); const id=setInterval(()=>{ remaining--; const elT=document.getElementById('timer'); if(elT) elT.textContent='⏱ '+remaining; if(remaining<=0){ clearInterval(id); finalize(); } },1000); }
   showCurrent();
 }
 
@@ -719,6 +728,7 @@ function showCurrent(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
   qc.innerHTML=''; qctrl.innerHTML='';
+  if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
   if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const lbl=cat.labels?.[settings.lang]||cat.labels?.en||cat.id; qc.appendChild(el('div',{className:'muted'}, lbl)); } }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
@@ -731,15 +741,30 @@ function showCurrent(){
   else if(q.type==='matching') renderPlayMatching(q, qc, qctrl);
   else if(q.type==='order') renderPlayOrder(q, qc, qctrl);
   else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
-  if(settings.allowSkip){ const sk=el('button',{className:'btn',onclick:skipQuestion}, 'Skip'); qctrl.appendChild(sk); }
+  if(settings.timeLimitSec>0){
+    let remaining=settings.timeLimitSec;
+    const tEl=el('div',{id:'timer'}, '⏱ '+remaining);
+    qc.prepend(tEl);
+    __playState.timerId=setInterval(()=>{
+      remaining--;
+      const elT=document.getElementById('timer');
+      if(elT) elT.textContent='⏱ '+remaining;
+      if(remaining<=0){
+        clearInterval(__playState.timerId); __playState.timerId=null;
+        proceed(false, q, t('time'));
+      }
+    },1000);
+  }
+  if(settings.allowSkip){ const sk=el('button',{className:'btn',onclick:skipQuestion}, t('skip')); qctrl.appendChild(sk); }
 }
 
 function proceed(ok, q, msg=''){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
+  if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   __playState.results.push({q, ok});
   if(settings.feedbackImmediate){
-    const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? 'Correct' : 'Wrong'));
+    const b=el('div',{className:'banner '+(ok?'ok':'err')}, msg || (ok? t('correct') : t('wrong')));
     if(!ok && settings.showCorrectImmediate){
       const corr=describeCorrect(q);
       if(corr){ b.appendChild(el('div',{className:'muted'}, corr)); }
@@ -749,7 +774,7 @@ function proceed(ok, q, msg=''){
     qctrl.innerHTML='';
     let advanced=false;
     const go=()=>{ if(advanced) return; advanced=true; nextQuestion(); };
-    const nx=el('button',{className:'btn btn-primary',onclick:go}, 'Next');
+    const nx=el('button',{className:'btn btn-primary',onclick:go}, t('next'));
     qctrl.appendChild(nx);
     nx.focus();
     addKeyHandler(e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); go(); } });
@@ -758,11 +783,11 @@ function proceed(ok, q, msg=''){
 }
 
 function nextQuestion(){ __playState.idx++; if(__playState.idx>=__playState.pool.length) finalize(); else showCurrent(); }
-function skipQuestion(){ const q=__playState.pool.splice(__playState.idx,1)[0]; __playState.pool.push(q); showCurrent(); }
+function skipQuestion(){ if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; } const q=__playState.pool.splice(__playState.idx,1)[0]; __playState.pool.push(q); showCurrent(); }
 function finalize(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   qc.innerHTML=''; qctrl.innerHTML='';
-  qc.appendChild(el('h3',{}, `Score: ${__playState.correct} / ${__playState.pool.length}`));
+  qc.appendChild(el('h3',{}, `${t('score')}: ${__playState.correct} / ${__playState.pool.length}`));
   if(settings.feedbackEnd){
     const list=el('ul',{style:'list-style:none;padding-left:0'});
     __playState.results.forEach((r,i)=>{
@@ -807,7 +832,8 @@ function describeCorrect(q){
       const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return 'Order: '+t.join(' → ');
     }
     if(q.type==='multitext'){
-      return '';
+      const ans=(q.prompts||[]).map(p=> (p?.text||p||'')).filter(Boolean);
+      return ans.length? t('answers')+': '+ans.join(', ') : '';
     }
   }catch(e){ return ''; }
 }
@@ -856,7 +882,7 @@ function renderPlayMultiple(q, qc, qctrl){
     qc.appendChild(row);
     return chk;
   });
-  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{
     const chosen=checks.map((c,i)=>c.checked?i:-1).filter(i=>i!==-1);
     const corrects=(q.corrects||[]).slice();
@@ -891,7 +917,7 @@ function renderPlayText(q, qc, qctrl){
   }
 
   const check = ()=>{ const u = normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
-  const s = el('button',{className:'btn btn-primary'}, 'Submit');
+  const s = el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick = ()=> proceed(check(), q);
   qctrl.appendChild(s);
   inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); proceed(check(), q); }});
@@ -929,7 +955,7 @@ function renderPlayMatching(q, qc, qctrl){
   });
 
   grid.append(leftCol,rightCol); qc.appendChild(grid);
-  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
   qctrl.appendChild(s);
 }
@@ -940,7 +966,7 @@ function renderPlayOrder(q, qc, qctrl){
   const list=el('ul',{className:'sort-list'});
   sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
   qc.appendChild(list);
-  const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
+  const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
 function renderPlayMultiText(q, qc, qctrl){
@@ -969,12 +995,12 @@ function renderPlayMultiText(q, qc, qctrl){
     });
   });
   if(inputs[0]) inputs[0].focus();
-  const check=()=> inputs.every(i=> i.value.trim().length>0);
-  const s=el('button',{className:'btn btn-primary'}, 'Submit');
+  const check=()=> inputs.every((inp,idx)=> normalizeText(inp.value) === normalizeText(prompts[idx]?.text||''));
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=> proceed(check(), q);
   qctrl.appendChild(s);
 }
-function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
+function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
 function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.classList.add('dragging-el'); e.dataTransfer.effectAllowed='move'; }); li.addEventListener('dragend',()=> li.classList.remove('dragging-el')); li.addEventListener('dragover',e=>{ e.preventDefault(); const dragging=list.querySelector('.dragging-el'); if(!dragging||dragging===li) return; const rect=li.getBoundingClientRect(); const after=(e.clientY-rect.top)>rect.height/2; list.insertBefore(dragging, after? li.nextSibling : li); }); }
@@ -1157,7 +1183,7 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
     if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
     const check=()=>{ const u=normalizeText(inp.value); return acceptable.some(a=> normalizeText(a.text)===u ); };
-    const s=el('button',{className:'btn btn-primary'}, 'Submit'); s.onclick=()=>proceed(check(), q); qctrl.appendChild(s);
+    const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>proceed(check(), q); qctrl.appendChild(s);
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } });
   };
 })();
