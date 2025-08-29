@@ -186,7 +186,7 @@
 // ===== State =====
 let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
 let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
-meta.categories = (meta.categories || []).map(c=> c.label? c : {id:c.id, label:(c.labels?.en || c.labels?.de || c.id), hint:c.hint||''});
+meta.categories = (meta.categories || []).map(c=> ({id:c.id, label:(c.label||c.labels?.en||c.labels?.de||c.id), comment:c.comment||c.hint||''}));
 function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
   feedbackImmediate:true,
@@ -448,7 +448,7 @@ function showNewCategoryUI(){
   const lang = (settings && settings.lang) || 'en';
   const nameIn = el('input',{type:'text', placeholder: lang==='de'?'Neuer Kategoriename':'New category name'});
   const idIn   = el('input',{type:'text', placeholder:'id (auto from name)'});
-  const hintIn = el('input',{type:'text', placeholder: lang==='de'?'Hinweis (optional)':'Hint (optional)'});
+  const commentIn = el('input',{type:'text', placeholder: lang==='de'?'Kommentar (optional)':'Comment (optional)'});
   const create = el('button',{className:'btn btn-primary'}, lang==='de'?'Erstellen':'Create');
   const cancel = el('button',{className:'btn btn-ghost'}, lang==='de'?'Abbrechen':'Cancel');
 
@@ -458,12 +458,12 @@ function showNewCategoryUI(){
   create.onclick = ()=>{
     const label = nameIn.value.trim();
     const id    = (idIn.value.trim() || slugFromLabel(label));
-    const hint  = hintIn.value.trim();
+    const comment  = commentIn.value.trim();
     if(!label){ alert(lang==='de'?'Bitte Namen eingeben':'Please enter a name'); return; }
     if(!meta.categories) meta.categories = [];
     if(meta.categories.some(c=>c.id===id)){ alert(lang==='de'?'ID existiert bereits':'ID already exists'); return; }
 
-    meta.categories.push({ id, label, hint });
+    meta.categories.push({ id, label, comment });
     saveMeta();
 
     renderCategorySelect();
@@ -479,7 +479,7 @@ function showNewCategoryUI(){
     if(sel.value === '__new__') sel.value = '';
   };
 
-  ui.append(el('div',{className:'row'}, nameIn, idIn, hintIn, create, cancel));
+  ui.append(el('div',{className:'row'}, nameIn, idIn, commentIn, create, cancel));
 }
 
 // (Optional) categories manager for Settings, if you have a <div id="catsManager">
@@ -490,29 +490,29 @@ function renderCategoriesManager(){
   host.innerHTML = '';
 
   const lang=(settings&&settings.lang)||'en';
-  host.appendChild(el('div',{className:'muted'}, lang==='de'? 'Definiere Kategorien/Themen. Jede hat eine ID, Bezeichnung und optionalen Hinweis.':'Define categories/topics. Each has an id, label, and optional hint.'));
+  host.appendChild(el('div',{className:'muted'}, lang==='de'? 'Definiere Kategorien/Themen. Jede hat eine ID, Bezeichnung und optionalen Kommentar.':'Define categories/topics. Each has an id, label, and optional comment.'));
   const list = el('div',{}); host.appendChild(list);
 
   (meta.categories||[]).forEach((c,idx)=>{
     const row = el('div',{className:'row',style:'flex-wrap:nowrap;align-items:center'});
     const idIn = el('input',{type:'text',value:c.id,placeholder:'id',style:'width:80px'});
     const labelIn = el('input',{type:'text',value:c.label||'',placeholder:lang==='de'?'Bezeichnung':'Label',style:'flex:1;width:auto'});
-    const hintIn = el('input',{type:'text',value:c.hint||'',placeholder:lang==='de'?'Hinweis (optional)':'Hint (optional)',style:'flex:1;width:auto'});
+    const commentIn = el('input',{type:'text',value:c.comment||c.hint||'',placeholder:lang==='de'?'Kommentar (optional)':'Comment (optional)',style:'flex:1;width:auto'});
     const del  = el('button',{className:'btn btn-ghost',title:lang==='de'?'Entfernen':'Remove',onclick:()=>{
       meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
     }},'🗑️');
 
     idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
     labelIn.oninput = ()=>{ c.label = labelIn.value; saveMeta(); renderCategorySelect(); };
-    hintIn.oninput = ()=>{ c.hint = hintIn.value; saveMeta(); };
+    commentIn.oninput = ()=>{ c.comment = commentIn.value; saveMeta(); };
 
-    row.append(idIn,labelIn,hintIn,del);
+    row.append(idIn,labelIn,commentIn,del);
     list.appendChild(row);
   });
 
   const add = el('button',{className:'btn'}, '➕ '+(lang==='de'?'Kategorie hinzufügen':'Add category'));
   add.onclick = ()=>{
-    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), label:'', hint:'' });
+    meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), label:'', comment:'' });
     saveMeta(); renderCategoriesManager(); renderCategorySelect();
   };
   host.appendChild(add);
@@ -836,7 +836,7 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
     } else {
       throw new Error('Invalid JSON');
     }
-    meta.categories = (meta.categories||[]).map(c=> c.label? c : {id:c.id, label:(c.labels?.en||c.labels?.de||c.id), hint:c.hint||''});
+    meta.categories = (meta.categories||[]).map(c=> ({id:c.id, label:(c.label||c.labels?.en||c.labels?.de||c.id), comment:c.comment||c.hint||''}));
     localStorage.setItem('quizData', JSON.stringify(questions)); localStorage.setItem('quizMeta', JSON.stringify(meta));
     renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ✓'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
   }
@@ -864,7 +864,15 @@ function showCurrent(){
   qc.innerHTML=''; qctrl.innerHTML='';
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
-  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const wrap=el('div',{className:'muted'}, cat.label||cat.id); if(cat.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},cat.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; wrap.append(' ',hb,ht); } qc.appendChild(wrap); } }
+  if(settings.showCategory && q.categoryId){
+    const cat=(meta.categories||[]).find(c=>c.id===q.categoryId);
+    if(cat){
+      const wrap=el('div',{className:'muted'}, cat.label||cat.id);
+      qc.appendChild(wrap);
+      const cm=cat.comment||cat.hint;
+      if(cm) qc.appendChild(el('p',{className:'muted'}, cm));
+    }
+  }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
   if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
   if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
@@ -979,6 +987,15 @@ function describeCorrect(q){
 function renderPlaySingle(q, qc, qctrl){
   q.answers = (q.answers||[]);
   const btns=[];
+  let chosen=-1;
+  let submitted=false;
+  const submit=()=>{
+    if(submitted) return;
+    submitted=true;
+    btns.forEach(b=>b.disabled=true);
+    proceed(chosen===q.correct, q);
+  };
+  let submitBtn=null;
   q.answers.forEach((a,i)=>{
     const b = el('button',{className:'btn opt'});
     const box = el('div',{});
@@ -995,9 +1012,20 @@ function renderPlaySingle(q, qc, qctrl){
     }
     b.appendChild(box);
     b.onclick = ()=>{
-      if(settings.autoValidate){ proceed(i===q.correct, q); }
-      else { markSubmit(()=> i===q.correct, qctrl, q); }
+      if(submitted) return;
       if(settings.autoTTSItems && a.text) speak(a.text);
+      chosen=i;
+      if(settings.autoValidate){
+        submit();
+      }else{
+        btns.forEach(btn=>btn.classList.remove('selected'));
+        b.classList.add('selected');
+        if(!submitBtn){
+          submitBtn=el('button',{className:'btn btn-primary'}, t('submit'));
+          submitBtn.onclick=submit;
+          qctrl.appendChild(submitBtn);
+        }
+      }
     };
     qc.appendChild(b); btns.push(b);
   });
@@ -1341,9 +1369,18 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
       return {ok:false};
     };
     const s=el('button',{className:'btn btn-primary'}, t('submit'));
-    s.onclick=()=>{ const r=check(); if(r.goodGuess) proceed(true,q,t('goodguess'),{showCorrect:true}); else proceed(r.ok,q); };
+    let submitted=false;
+    const submit=()=>{
+      if(submitted) return;
+      submitted=true;
+      inp.disabled=true;
+      s.disabled=true;
+      const r=check();
+      if(r.goodGuess) proceed(true,q,t('goodguess'),{showCorrect:true}); else proceed(r.ok,q);
+    };
+    s.onclick=submit;
     qctrl.appendChild(s);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); s.click(); } });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); submit(); } });
   };
 })();
 </script>
