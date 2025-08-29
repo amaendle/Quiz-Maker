@@ -61,10 +61,10 @@
       <div class="row" id="qMediaRow">
         <input type="file" id="qImg" accept="image/*" style="display:none"/>
         <input type="file" id="qAud" accept="audio/*" style="display:none"/>
-        <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
+        <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
         <img id="qImgPrev" class="thumb" style="display:none"/>
         <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
-        <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
+        <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
         <span id="qAudMini" style="display:none"></span>
         <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
         <input type="file" id="qVid" accept="video/*" style="display:none"/>
@@ -93,7 +93,7 @@
         <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
         <img id="cImgPrev" class="thumb" style="display:none"/>
         <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
-        <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
+        <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
         <span id="cAudMini" style="display:none"></span>
         <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
         <input type="file" id="cVid" accept="video/*" style="display:none"/>
@@ -216,16 +216,16 @@ function t(k){ const lang=settings.lang||'en'; return (STRINGS[lang]&&STRINGS[la
 function applyLang(){
   const lang=settings.lang||'en';
   const tx={
-    'tab-editor': lang==='de'?'✏️ Editor':'✏️ Editor',
+    'tab-editor': lang==='de'?'✏️ Editor':'✏️ Editor',
     'tab-player': lang==='de'?'▶️ Spielen':'▶️ Play',
-    'tab-settings': lang==='de'?'⚙️ Einstellungen':'⚙️ Settings',
+    'tab-settings': lang==='de'?'⚙️ Einstellungen':'⚙️ Settings',
     'editorTitle': lang==='de'?'Fragen bearbeiten':'Edit Questions',
     'newQuestion': lang==='de'?'➕ Neue Frage':'➕ New question',
     'questionLabel': lang==='de'?'Frage':'Question',
     'questionText': {placeholder: lang==='de'?'Gib deine Frage ein':'Type your question'},
-    'qImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'qImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
     'qImgClear': lang==='de'?'Bild löschen':'Clear image',
-    'qAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
+    'qAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
     'qAudClear': lang==='de'?'Audio löschen':'Clear audio',
     'qVidPick': lang==='de'?'📹 Video':'📹 Video',
     'qVidClear': lang==='de'?'Video löschen':'Clear video',
@@ -238,9 +238,9 @@ function applyLang(){
     'questionTypeOrder': lang==='de'?'In die richtige Reihenfolge bringen':'Put in the right order',
     'commentLabel': lang==='de'?'Kommentar (optional)':'Comment (optional)',
     'questionComment': {placeholder: lang==='de'?'Wird bei Feedback angezeigt, wenn aktiviert':'Shown with feedback when enabled'},
-    'cImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'cImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
     'cImgClear': lang==='de'?'Bild löschen':'Clear image',
-    'cAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
+    'cAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
     'cAudClear': lang==='de'?'Audio löschen':'Clear audio',
     'cVidPick': lang==='de'?'📹 Video':'📹 Video',
     'cVidClear': lang==='de'?'Video löschen':'Clear video',
@@ -249,7 +249,7 @@ function applyLang(){
     'saveQuestion': lang==='de'?'💾 Frage speichern':'💾 Save question',
     'cancelEdit': lang==='de'?'Abbrechen':'Cancel',
     'savedQuestionsTitle': lang==='de'?'Gespeicherte Fragen':'Saved Questions',
-    'importBtn': lang==='de'?'📂 JSON importieren':'📂 Import JSON',
+    'importBtn': lang==='de'?'📂 JSON importieren':'📂 Import JSON',
     'exportBtn': lang==='de'?'💾 JSON exportieren':'💾 Export JSON',
     'playerTitle': lang==='de'?'Quiz-Zeit':'Quiz Time',
     'settingsTitle': lang==='de'?'Einstellungen':'Settings',
@@ -500,7 +500,7 @@ function renderCategoriesManager(){
     const commentIn = el('input',{type:'text',value:c.comment||c.hint||'',placeholder:lang==='de'?'Kommentar (optional)':'Comment (optional)',style:'flex:1;width:auto'});
     const del  = el('button',{className:'btn btn-ghost',title:lang==='de'?'Entfernen':'Remove',onclick:()=>{
       meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
-    }},'🗑️');
+    }},'🗑️');
 
     idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
     labelIn.oninput = ()=>{ c.label = labelIn.value; saveMeta(); renderCategorySelect(); };
@@ -527,7 +527,7 @@ function mediaPickers(hostRow, init={}){
   const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
   const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
   const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
-  const iBtn=el('button',{className:'chip',type:'button'},'🖼️');
+  const iBtn=el('button',{className:'chip',type:'button'},'🖼️');
   const aBtn=el('button',{className:'chip',type:'button'},'🔈');
   const vBtn=el('button',{className:'chip',type:'button'},'📹');
   const prev=el('span',{});
@@ -707,14 +707,14 @@ function renderQuestionList(){
         if(q.questionMedia?.video){ content.appendChild(el('span',{className:'media-icon'},'📹')); }
     li.append(content);
     const actions=el('div',{className:'question-actions'});
-    const edit=el('button',{},'✏️');
+    const edit=el('button',{},'✏️');
     edit.onclick=()=>{
       editingIndex=i;
       loadIntoEditor(q);
       showEditorForm();
       document.getElementById('editor').scrollIntoView({behavior:'smooth'});
     };
-    const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
+    const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
     actions.append(edit,del); li.append(actions); ul.append(li);
   });
   // drag reorder
@@ -1192,8 +1192,8 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
     const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
     const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
-    const iBtn=el('button',{className:'chip',type:'button'},'🖼️'); iBtn.onclick=()=>iFile.click();
-    const aBtn=el('button',{className:'chip',type:'button'},'🔈'); aBtn.onclick=()=>aFile.click();
+    const iBtn=el('button',{className:'chip',type:'button'},'🖼️'); iBtn.onclick=()=>iFile.click();
+    const aBtn=el('button',{className:'chip',type:'button'},'🔈'); aBtn.onclick=()=>aFile.click();
     const vBtn=el('button',{className:'chip',type:'button'},'📹'); vBtn.onclick=()=>vFile.click();
     const preview=el('span',{});
     if(valueObj.image){ preview.appendChild(el('img',{src:valueObj.image,className:'thumb'})); row.dataset.img=valueObj.image; }
@@ -1230,14 +1230,14 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
       const list=el('div',{id:'answersList'});
       const src = (data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
       src.forEach((ans,i)=> list.appendChild(buildAnswerRow(type, ans, i, data)) );
-      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
+      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
       optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
     }
     if(type==='text'){
       const list=el('div',{id:'txtAccept'});
       const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
       src.forEach(v=> list.appendChild(buildTextRow(v)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
       optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
     }
     if(type==='multitext'){
@@ -1249,13 +1249,13 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     if(type==='matching'){
       const wrap=el('div',{id:'pairsWrap'});
       (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(buildPairRow(p)));
-      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
       optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT. Each side can have text, image, audio, and an optional hint.'), wrap, add);
     }
     if(type==='order'){
       const list=el('div',{id:'orderList'});
       (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(buildOrderRow(it)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
       optHost.append(el('div',{className:'muted'},'The correct order is the editor order. Items can include text, image, audio, and an optional hint.'), list, add);
     }
   }
