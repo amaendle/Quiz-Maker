@@ -44,7 +44,7 @@
 </head>
 <body>
 <main>
-  <h1>📚 Quiz Maker</h1>
+  <h1>📚 Quiz Maker</h1>
   <div class="tabs">
     <button id="tab-editor"></button>
     <button id="tab-player"></button>
@@ -220,7 +220,7 @@ function applyLang(){
     'tab-player': lang==='de'?'▶️ Spielen':'▶️ Play',
     'tab-settings': lang==='de'?'⚙️ Einstellungen':'⚙️ Settings',
     'editorTitle': lang==='de'?'Fragen bearbeiten':'Edit Questions',
-    'newQuestion': lang==='de'?'➕ Neue Frage':'➕ New question',
+    'newQuestion': lang==='de'?'➕ Neue Frage':'➕ New question',
     'questionLabel': lang==='de'?'Frage':'Question',
     'questionText': {placeholder: lang==='de'?'Gib deine Frage ein':'Type your question'},
     'qImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
@@ -420,7 +420,7 @@ function renderCategorySelect(){
   (meta.categories||[]).forEach(c=>{
     sel.appendChild(new Option(c.label||c.id, c.id));
   });
-  sel.appendChild(new Option('➕ '+(settings.lang==='de'?'Neu…':'New…'),'__new__'));
+  sel.appendChild(new Option('➕ '+(settings.lang==='de'?'Neu…':'New…'),'__new__'));
 
   // restore previous selection if still present
   if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
@@ -601,7 +601,7 @@ function renderOptionsEditor(data={}){
   if(type==='matching'){
     const wrap=el('div',{id:'pairsWrap'});
     (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(pairRow(p)) );
-    const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(pairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+    const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(pairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
     optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT.'), wrap, add);
   }
   if(type==='order'){
