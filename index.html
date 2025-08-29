@@ -371,7 +371,6 @@ let qImgData='', qAudData='', qVidData='', cImgData='', cAudData='', cVidData=''
 const qImg=document.getElementById('qImg'), qImgPick=document.getElementById('qImgPick'), qImgPrev=document.getElementById('qImgPrev'), qImgClear=document.getElementById('qImgClear');
 qImgPick.onclick=()=>qImg.click();
 qImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qImgData=await fileToDataURL(f); qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; };
-  qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none';
 qImgClear.onclick=()=>{ qImg.value=''; qImgData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; };
 const qAud=document.getElementById('qAud'), qAudPick=document.getElementById('qAudPick'), qAudMini=document.getElementById('qAudMini'), qAudClear=document.getElementById('qAudClear');
 qAudPick.onclick=()=>qAud.click();
@@ -384,7 +383,6 @@ qVidClear.onclick=()=>{ qVid.value=''; qVidData=''; qVidMini.innerHTML=''; qVidM
 const cImg=document.getElementById('cImg'), cImgPick=document.getElementById('cImgPick'), cImgPrev=document.getElementById('cImgPrev'), cImgClear=document.getElementById('cImgClear');
 cImgPick.onclick=()=>cImg.click();
 cImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cImgData=await fileToDataURL(f); cImgPrev.src=cImgData; cImgPrev.style.display='block'; cImgClear.style.display='inline-block'; };
-  cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none';
 cImgClear.onclick=()=>{ cImg.value=''; cImgData=''; cImgPrev.style.display='none'; cImgClear.style.display='none'; };
 const cAud=document.getElementById('cAud'), cAudPick=document.getElementById('cAudPick'), cAudMini=document.getElementById('cAudMini'), cAudClear=document.getElementById('cAudClear');
 cAudPick.onclick=()=>cAud.click();
@@ -403,7 +401,8 @@ const qTypeSel = document.getElementById('questionType');
 function slugFromLabel(str){
   return String(str||'cat')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g,'-')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^\p{Letter}\p{Number}]+/gu,'-')
     .replace(/^-+|-+$/g,'') || 'cat';
 }
 
