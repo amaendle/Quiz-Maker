@@ -815,6 +815,7 @@ function applySettingsToUI(){
   renderCategorySelect();
   renderCategoriesManager();
   applyLang();
+  updateHintInputsVisibility();
 }
 applySettingsToUI();
 
@@ -827,6 +828,11 @@ if(catsToggle && catsPanel){
     else { catsPanel.style.maxHeight=catsPanel.scrollHeight+'px'; }
   };
 }
+
+document.getElementById('showAnswerHints').addEventListener('change',e=>{
+  settings.showAnswerHints=e.target.checked;
+  updateHintInputsVisibility();
+});
 
 document.getElementById('saveSettings').onclick=()=>{
   settings.feedbackImmediate=document.getElementById('feedbackImmediate').checked;
@@ -856,6 +862,7 @@ document.getElementById('saveSettings').onclick=()=>{
   applyLang();
   renderCategorySelect();
   renderCategoriesManager();
+  updateHintInputsVisibility();
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
@@ -1159,6 +1166,9 @@ function renderPlayMatching(q, qc, qctrl){
     const rightItems=[...rightCol.children];
     const n=Math.min(leftItems.length,rightItems.length);
     for(let i=0;i<n;i++){
+      leftItems[i].style.height=rightItems[i].style.height='auto';
+    }
+    for(let i=0;i<n;i++){
       const h=Math.max(leftItems[i].offsetHeight,rightItems[i].offsetHeight);
       leftItems[i].style.height=rightItems[i].style.height=h+'px';
     }
@@ -1269,6 +1279,11 @@ function addDragHandlers(li, list, onChange){
   },{passive:false});
   li.addEventListener('touchend',()=>{ li.classList.remove('dragging-el'); if(onChange) onChange(); });
 }
+function updateHintInputsVisibility(){
+  document.querySelectorAll('#questionOptionsContainer [data-role="hint"]').forEach(inp=>{
+    inp.style.display = settings.showAnswerHints ? '' : 'none';
+  });
+}
 // --- Overrides: editor with hint fields, collection, and text play ---
 (function(){
   if(!window.el) return;
@@ -1308,6 +1323,7 @@ function addDragHandlers(li, list, onChange){
     }
     const i=el('input',{type:'text',value:o.text||'',placeholder:'Text'});
     const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'});
+    h.dataset.role='hint';
     const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
     r.append(i,h,d);
     return r;
@@ -1317,16 +1333,18 @@ function addDragHandlers(li, list, onChange){
     const lLabel=el('label',{},'Left');
     const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
     const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
+    lHint.dataset.role='hint';
     const leftRow=el('div',{className:'row'}); leftRow.dataset.img=p.left?.image||''; leftRow.dataset.aud=p.left?.audio||''; leftRow.dataset.vid=p.left?.video||'';
     mediaPickers(leftRow,{image:p.left?.image||'',audio:p.left?.audio||'',video:p.left?.video||''}).forEach(n=>leftRow.appendChild(n)); leftWrap.append(lLabel,lText,lHint,leftRow);
     const rightWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
     const rLabel=el('label',{},'Right');
     const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
     const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
+    rHint.dataset.role='hint';
     const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||''; rightRow.dataset.vid=p.right?.video||'';
     mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rLabel,rText,rHint,rightRow);
     const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(leftWrap,rightWrap,del); return r; }
-  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
+  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); iHint.dataset.role='hint'; const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
 
   function renderOptionsEditor_v2(data={}){
     const optHost=optHostRef; if(!optHost||!qTypeSelRef) return; optHost.innerHTML='';
@@ -1335,34 +1353,35 @@ function addDragHandlers(li, list, onChange){
       const list=el('div',{id:'answersList'});
       const src = (data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
       src.forEach((ans,i)=> list.appendChild(buildAnswerRow(type, ans, i, data)) );
-      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
+      const addBtn = el('button',{className:'btn',onclick:()=>{ list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data)); updateHintInputsVisibility(); }}, '➕ Add answer');
       optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
     }
     if(type==='text'){
       const list=el('div',{id:'txtAccept'});
       const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
       src.forEach(v=> list.appendChild(buildTextRow(v)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildTextRow({text:''})); updateHintInputsVisibility(); }}, '➕ Add acceptable');
       optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
     }
     if(type==='multitext'){
       const list=el('div',{id:'multiPrompts'});
       (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(buildTextRow(lbl,true)));
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''},true))}, '➕ Add field');
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildTextRow({text:''},true)); updateHintInputsVisibility(); }}, '➕ Add field');
       optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
     }
     if(type==='matching'){
       const wrap=el('div',{id:'pairsWrap'});
       (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(buildPairRow(p)));
-      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+      const add=el('button',{className:'btn',onclick:()=>{ wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}})); updateHintInputsVisibility(); }}, '➕ Add pair');
       optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT. Each side can have text, image, audio, and an optional hint.'), wrap, add);
     }
     if(type==='order'){
       const list=el('div',{id:'orderList'});
       (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(buildOrderRow(it)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildOrderRow({text:''})); updateHintInputsVisibility(); }}, '➕ Add item');
       optHost.append(el('div',{className:'muted'},'The correct order is the editor order. Items can include text, image, audio, and an optional hint.'), list, add);
     }
+    updateHintInputsVisibility();
   }
   window.renderOptionsEditor = renderOptionsEditor_v2;
   function convertQuestionData(prev, newType){
