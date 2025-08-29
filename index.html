@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quiz Maker ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ full build (fixed)</title>
+<title>Quiz Maker — full build (fixed)</title>
 <style>
   :root{--bg:#f4faff;--card:#fff;--ink:#163046;--muted:#5e7180;--line:#d6e2ea;--accent:#2e7d32}
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
@@ -44,7 +44,7 @@
 </head>
 <body>
 <main>
-  <h1>ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Quiz Maker</h1>
+  <h1>📚 Quiz Maker</h1>
   <div class="tabs">
     <button id="tab-editor"></button>
     <button id="tab-player"></button>
@@ -53,7 +53,7 @@
 
   <section id="editor" class="tab-content">
     <h2 id="editorTitle">Edit Questions</h2>
-    <button id="newQuestion" class="btn">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ New question</button>
+    <button id="newQuestion" class="btn">➕ New question</button>
 
     <div id="editorForm" style="display:none">
       <label id="questionLabel">Question</label>
@@ -61,14 +61,14 @@
       <div class="row" id="qMediaRow">
         <input type="file" id="qImg" accept="image/*" style="display:none"/>
         <input type="file" id="qAud" accept="audio/*" style="display:none"/>
-        <button id="qImgPick" class="chip" type="button">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Image</button>
+        <button id="qImgPick" class="chip" type="button">🖼️ Image</button>
         <img id="qImgPrev" class="thumb" style="display:none"/>
         <button id="qImgClear" class="btn" type="button" style="display:none">Clear image</button>
-        <button id="qAudPick" class="chip" type="button">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio</button>
+        <button id="qAudPick" class="chip" type="button">🔈 Audio</button>
         <span id="qAudMini" style="display:none"></span>
         <button id="qAudClear" class="btn" type="button" style="display:none">Clear audio</button>
         <input type="file" id="qVid" accept="video/*" style="display:none"/>
-        <button id="qVidPick" class="chip" type="button">ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¹ Video</button>
+        <button id="qVidPick" class="chip" type="button">📹 Video</button>
         <span id="qVidMini" style="display:none"></span>
         <button id="qVidClear" class="btn" type="button" style="display:none">Clear video</button>
       </div>
@@ -90,23 +90,23 @@
       <div class="row" id="cMediaRow">
         <input type="file" id="cImg" accept="image/*" style="display:none"/>
         <input type="file" id="cAud" accept="audio/*" style="display:none"/>
-        <button id="cImgPick" class="chip" type="button">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Image</button>
+        <button id="cImgPick" class="chip" type="button">🖼️ Image</button>
         <img id="cImgPrev" class="thumb" style="display:none"/>
         <button id="cImgClear" class="btn" type="button" style="display:none">Clear image</button>
-        <button id="cAudPick" class="chip" type="button">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio</button>
+        <button id="cAudPick" class="chip" type="button">🔈 Audio</button>
         <span id="cAudMini" style="display:none"></span>
         <button id="cAudClear" class="btn" type="button" style="display:none">Clear audio</button>
         <input type="file" id="cVid" accept="video/*" style="display:none"/>
-        <button id="cVidPick" class="chip" type="button">ÃÂ°ÃÂÃÂÃÂ¹ Video</button>
+        <button id="cVidPick" class="chip" type="button">📹 Video</button>
         <span id="cVidMini" style="display:none"></span>
         <button id="cVidClear" class="btn" type="button" style="display:none">Clear video</button>
       </div>
 
       <label id="categoryLabel">Category / Topic (optional)</label>
-      <select id="categorySelect"><option id="catNoneOption" value="">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ none ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</option></select>
+      <select id="categorySelect"><option id="catNoneOption" value="">— none —</option></select>
       <div id="categoryNewUI" style="display:none;margin-top:8px"></div>
 
-      <button id="saveQuestion" class="btn btn-primary">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save question</button>
+      <button id="saveQuestion" class="btn btn-primary">💾 Save question</button>
       <button id="cancelEdit" class="btn" type="button">Cancel</button>
     </div>
 
@@ -115,8 +115,8 @@
 
     <div class="row" style="margin-top:10px">
       <input type="file" id="importFile" accept="application/json" style="display:none"/>
-      <button id="importBtn" class="btn">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Import JSON</button>
-      <button id="exportBtn" class="btn btn-primary">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Export JSON</button>
+      <button id="importBtn" class="btn">📂 Import JSON</button>
+      <button id="exportBtn" class="btn btn-primary">💾 Export JSON</button>
     </div>
   </section>
 
@@ -178,7 +178,7 @@
     <div id="catsPanel"><div id="catsManager"></div></div>
 
     <button id="saveSettings" class="btn btn-primary">Save settings</button>
-    <span id="settingsSaved" style="display:none;margin-left:8px">Saved ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ</span>
+    <span id="settingsSaved" style="display:none;margin-left:8px">Saved ✓</span>
   </section>
 </main>
 
@@ -209,26 +209,26 @@ if('feedback' in settings){
 document.documentElement.lang = settings.lang || 'en';
 const STRINGS={
   en:{submit:'Submit',next:'Next',skip:'Skip',correct:'Correct',wrong:'Wrong',time:'Time\'s up!',score:'Score',answers:'Answers',goodguess:'Good guess!'},
-  de:{submit:'Senden',next:'Weiter',skip:'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂberspringen',correct:'Richtig',wrong:'Falsch',time:'Zeit abgelaufen!',score:'Punkte',answers:'Antworten',goodguess:'Guter Tipp!'}
+  de:{submit:'Senden',next:'Weiter',skip:'Überspringen',correct:'Richtig',wrong:'Falsch',time:'Zeit abgelaufen!',score:'Punkte',answers:'Antworten',goodguess:'Guter Tipp!'}
 };
 function t(k){ const lang=settings.lang||'en'; return (STRINGS[lang]&&STRINGS[lang][k])||STRINGS.en[k]||k; }
 
 function applyLang(){
   const lang=settings.lang||'en';
   const tx={
-    'tab-editor': lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Editor':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Editor',
-    'tab-player': lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Spielen':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Play',
-    'tab-settings': lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Einstellungen':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Settings',
+    'tab-editor': lang==='de'?'✏️ Editor':'✏️ Editor',
+    'tab-player': lang==='de'?'▶️ Spielen':'▶️ Play',
+    'tab-settings': lang==='de'?'⚙️ Einstellungen':'⚙️ Settings',
     'editorTitle': lang==='de'?'Fragen bearbeiten':'Edit Questions',
-    'newQuestion': lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Neue Frage':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ New question',
+    'newQuestion': lang==='de'?'➕ Neue Frage':'➕ New question',
     'questionLabel': lang==='de'?'Frage':'Question',
     'questionText': {placeholder: lang==='de'?'Gib deine Frage ein':'Type your question'},
-    'qImgPick': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Bild':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Image',
-    'qImgClear': lang==='de'?'Bild lÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶schen':'Clear image',
-    'qAudPick': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio',
-    'qAudClear': lang==='de'?'Audio lÃ¶schen':'Clear audio',
-    'qVidPick': lang==='de'?'ð¹ Video':'ð¹ Video',
-    'qVidClear': lang==='de'?'Video lÃ¶schen':'Clear video',
+    'qImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'qImgClear': lang==='de'?'Bild löschen':'Clear image',
+    'qAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
+    'qAudClear': lang==='de'?'Audio löschen':'Clear audio',
+    'qVidPick': lang==='de'?'📹 Video':'📹 Video',
+    'qVidClear': lang==='de'?'Video löschen':'Clear video',
     'questionTypeLabel': lang==='de'?'Typ':'Type',
     'questionTypeSingle': lang==='de'?'Einzelauswahl':'Single Choice',
     'questionTypeMultiple': lang==='de'?'Mehrfachauswahl':'Multiple Choice',
@@ -238,19 +238,19 @@ function applyLang(){
     'questionTypeOrder': lang==='de'?'In die richtige Reihenfolge bringen':'Put in the right order',
     'commentLabel': lang==='de'?'Kommentar (optional)':'Comment (optional)',
     'questionComment': {placeholder: lang==='de'?'Wird bei Feedback angezeigt, wenn aktiviert':'Shown with feedback when enabled'},
-    'cImgPick': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Bild':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ Image',
-    'cImgClear': lang==='de'?'Bild lÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶schen':'Clear image',
-    'cAudPick': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Audio',
+    'cImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
+    'cImgClear': lang==='de'?'Bild löschen':'Clear image',
+    'cAudPick': lang==='de'?'🔈 Audio':'🔈 Audio',
     'cAudClear': lang==='de'?'Audio löschen':'Clear audio',
     'cVidPick': lang==='de'?'📹 Video':'📹 Video',
     'cVidClear': lang==='de'?'Video löschen':'Clear video',
     'categoryLabel': lang==='de'?'Kategorie / Thema (optional)':'Category / Topic (optional)',
-    'catNoneOption': lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ keine ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ none ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ',
-    'saveQuestion': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Frage speichern':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save question',
+    'catNoneOption': lang==='de'?'— keine —':'— none —',
+    'saveQuestion': lang==='de'?'💾 Frage speichern':'💾 Save question',
     'cancelEdit': lang==='de'?'Abbrechen':'Cancel',
     'savedQuestionsTitle': lang==='de'?'Gespeicherte Fragen':'Saved Questions',
-    'importBtn': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ JSON importieren':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Import JSON',
-    'exportBtn': lang==='de'?'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ JSON exportieren':'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Export JSON',
+    'importBtn': lang==='de'?'📂 JSON importieren':'📂 Import JSON',
+    'exportBtn': lang==='de'?'💾 JSON exportieren':'💾 Export JSON',
     'playerTitle': lang==='de'?'Quiz-Zeit':'Quiz Time',
     'settingsTitle': lang==='de'?'Einstellungen':'Settings',
     'themeLabel': lang==='de'?'Design ':'Theme ',
@@ -265,14 +265,14 @@ function applyLang(){
     'showCommentsLabel': lang==='de'?'Kommentare anzeigen':'Show comments',
     'linkifyCommentsLabel': lang==='de'?'Links in Kommentaren aktivieren':'Linkify comment URLs',
     'validationHeading': lang==='de'?'Validierung':'Validation',
-    'autoValidateLabel': lang==='de'?'Automatisch prÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼fen (Standard)':'Validate automatically (default)',
+    'autoValidateLabel': lang==='de'?'Automatisch prüfen (Standard)':'Validate automatically (default)',
     'randomHeading': lang==='de'?'Zufallsmodus':'Random mode',
-    'randomModeLabel': lang==='de'?'Fragen zufÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¤llig anordnen':'Randomize questions',
+    'randomModeLabel': lang==='de'?'Fragen zufällig anordnen':'Randomize questions',
     'randomCountLabel': lang==='de'?'Anzahl der Fragen ':'Number of questions ',
     'timeHeading': lang==='de'?'Zeitlimit':'Time Limit',
     'timeLimitLabel': lang==='de'?'Zeit (Sekunden) ':'Time (seconds) ',
     'textMatchHeading': lang==='de'?'Textabgleich':'Text Matching',
-    'caseSensitiveLabel': lang==='de'?'GroÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ-/Kleinschreibung beachten':'Case sensitive',
+    'caseSensitiveLabel': lang==='de'?'Groß-/Kleinschreibung beachten':'Case sensitive',
     'ignorePunctLabel': lang==='de'?'Satzzeichen ignorieren':'Ignore punctuation',
     'normalizeAccentsLabel': lang==='de'?'Akzente normalisieren':'Normalize accents',
     'ignoreSpacesLabel': lang==='de'?'Leerzeichen zusammenfassen':'Collapse spaces',
@@ -282,14 +282,14 @@ function applyLang(){
     'mcq_partial': lang==='de'?'Teilpunkte':'Partial credit',
     'mcq_partial_penalty': lang==='de'?'Teilpunkte mit Abzug':'Partial with penalty',
     'speechHeading': lang==='de'?'Sprachausgabe':'Speech',
-    'autoTTSQuestionsLabel': lang==='de'?'Automatische TTS fÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼r Fragen':'Auto-TTS questions',
-    'autoTTSItemsLabel': lang==='de'?'Automatische TTS fÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼r Elemente/Optionen':'Auto-TTS items/options',
+    'autoTTSQuestionsLabel': lang==='de'?'Automatische TTS für Fragen':'Auto-TTS questions',
+    'autoTTSItemsLabel': lang==='de'?'Automatische TTS für Elemente/Optionen':'Auto-TTS items/options',
     'playModeHeading': lang==='de'?'Spielmodus':'Play mode',
-    'showCategoryLabel': lang==='de'?'Kategorie wÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¤hrend des Spiels anzeigen':'Show category during play',
-    'allowSkipLabel': lang==='de'?'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂberspringen von Fragen erlauben':'Allow skipping questions',
+    'showCategoryLabel': lang==='de'?'Kategorie während des Spiels anzeigen':'Show category during play',
+    'allowSkipLabel': lang==='de'?'überspringen von Fragen erlauben':'Allow skipping questions',
     'catsToggle': lang==='de'?'Kategorien / Themen / Mottos':'Categories / Topics / Mottos',
     'saveSettings': lang==='de'?'Einstellungen speichern':'Save settings',
-    'settingsSaved': lang==='de'?'Gespeichert ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ':'Saved ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ'
+    'settingsSaved': lang==='de'?'Gespeichert ✓':'Saved ✓'
   };
   const specials={
     themeLabel:tx.themeLabel,
@@ -362,7 +362,7 @@ function normalizeText(s){
   return out;
 }
 const fileToDataURL=f=>new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);});
-function miniAudio(url,label='Play'){ const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','false'); b.textContent='ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ '+label; const a=new Audio(url); b.onclick=()=>{ if(b.getAttribute('aria-pressed')==='true'){ a.pause(); a.currentTime=0; b.setAttribute('aria-pressed','false'); } else { a.play().catch(()=>{}); b.setAttribute('aria-pressed','true'); a.onended=()=>b.setAttribute('aria-pressed','false'); } }; return b; }
+function miniAudio(url,label='Play'){ const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','false'); b.textContent='🔈 '+label; const a=new Audio(url); b.onclick=()=>{ if(b.getAttribute('aria-pressed')==='true'){ a.pause(); a.currentTime=0; b.setAttribute('aria-pressed','false'); } else { a.play().catch(()=>{}); b.setAttribute('aria-pressed','true'); a.onended=()=>b.setAttribute('aria-pressed','false'); } }; return b; }
 function miniVideo(url){ const v=document.createElement('video'); v.src=url; v.controls=true; v.className='thumb'; return v; }
 function linkifyText(str){ const url=/https?:\/\/[^\s]+/g; const frag=document.createDocumentFragment(); let last=0; str=String(str||''); let m; while((m=url.exec(str))){ if(m.index>last) frag.appendChild(document.createTextNode(str.slice(last,m.index))); const a=document.createElement('a'); a.href=m[0]; a.target='_blank'; a.textContent=m[0]; frag.appendChild(a); last=m.index+m[0].length; } if(last<str.length) frag.appendChild(document.createTextNode(str.slice(last))); return frag; }
 
@@ -407,7 +407,7 @@ function slugFromLabel(str){
     .replace(/^-+|-+$/g,'') || 'cat';
 }
 
-// Rebuilds the <select id="categorySelect">; adds a "NewÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦" option that opens inline UI
+// Rebuilds the <select id="categorySelect">; adds a "New…" option that opens inline UI
 function renderCategorySelect(){
   const sel = document.getElementById('categorySelect');
   const ui  = document.getElementById('categoryNewUI');
@@ -416,17 +416,17 @@ function renderCategorySelect(){
   const prev = sel.value;
   sel.innerHTML = '';
 
-  const noneLbl = settings.lang==='de'?'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ keine ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ':'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ none ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ';
+  const noneLbl = settings.lang==='de'?'— keine —':'— none —';
   sel.appendChild(new Option(noneLbl,''));
   (meta.categories||[]).forEach(c=>{
     sel.appendChild(new Option(c.label||c.id, c.id));
   });
-  sel.appendChild(new Option('ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ '+(settings.lang==='de'?'NeuÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦':'NewÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦'),'__new__'));
+  sel.appendChild(new Option('➕ '+(settings.lang==='de'?'Neu…':'New…'),'__new__'));
 
   // restore previous selection if still present
   if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
 
-  // hook: show inline creator when "NewÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦" is chosen
+  // hook: show inline creator when "New…" is chosen
   sel.onchange = ()=>{
     if(sel.value === '__new__'){
       showNewCategoryUI();
@@ -501,7 +501,7 @@ function renderCategoriesManager(){
     const hintIn = el('input',{type:'text',value:c.hint||'',placeholder:lang==='de'?'Hinweis (optional)':'Hint (optional)',style:'flex:1;width:auto'});
     const del  = el('button',{className:'btn btn-ghost',title:lang==='de'?'Entfernen':'Remove',onclick:()=>{
       meta.categories.splice(idx,1); saveMeta(); renderCategoriesManager(); renderCategorySelect();
-    }},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ');
+    }},'🗑️');
 
     idIn.oninput = ()=>{ c.id = idIn.value.trim(); saveMeta(); renderCategorySelect(); };
     labelIn.oninput = ()=>{ c.label = labelIn.value; saveMeta(); renderCategorySelect(); };
@@ -511,7 +511,7 @@ function renderCategoriesManager(){
     list.appendChild(row);
   });
 
-  const add = el('button',{className:'btn'}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ '+(lang==='de'?'Kategorie hinzufÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼gen':'Add category'));
+  const add = el('button',{className:'btn'}, '➕ '+(lang==='de'?'Kategorie hinzufügen':'Add category'));
   add.onclick = ()=>{
     meta.categories.push({ id: slugFromLabel('Category '+((meta.categories?.length||0)+1)), label:'', hint:'' });
     saveMeta(); renderCategoriesManager(); renderCategorySelect();
@@ -528,9 +528,9 @@ function mediaPickers(hostRow, init={}){
   const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
   const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
   const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
-  const iBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ');
-  const aBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ');
-  const vBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¹');
+  const iBtn=el('button',{className:'chip',type:'button'},'🖼️');
+  const aBtn=el('button',{className:'chip',type:'button'},'🔈');
+  const vBtn=el('button',{className:'chip',type:'button'},'📹');
   const prev=el('span',{});
   if(init.image){ prev.appendChild(el('img',{src:init.image,className:'thumb'})); hostRow.dataset.img=init.image; }
   if(init.audio){ prev.appendChild(miniAudio(init.audio,'Audio')); hostRow.dataset.aud=init.audio; }
@@ -583,32 +583,32 @@ function renderOptionsEditor(data={}){
     const list=el('div',{id:'answersList'});
     const src=(data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
     src.forEach((ans,i)=> list.appendChild(answerRow(type, ans, i, data)) );
-    const addBtn=el('button',{className:'btn',onclick:()=> list.appendChild(answerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add answer');
+    const addBtn=el('button',{className:'btn',onclick:()=> list.appendChild(answerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
     optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
   }
   if(type==='text'){
     const list=el('div',{id:'txtAccept'});
     const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
     src.forEach(v=> list.appendChild(textRow(v)) );
-    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add acceptable');
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, '➕ Add acceptable');
     optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
   }
   if(type==='multitext'){
     const list=el('div',{id:'multiPrompts'});
     (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(textRow(lbl)) );
-    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add field');
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, '➕ Add field');
     optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
   }
   if(type==='matching'){
     const wrap=el('div',{id:'pairsWrap'});
     (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(pairRow(p)) );
-    const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(pairRow({left:{text:''},right:{text:''}}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add pair');
+    const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(pairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
     optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT.'), wrap, add);
   }
   if(type==='order'){
     const list=el('div',{id:'orderList'});
     (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(orderRow(it)) );
-    const add=el('button',{className:'btn',onclick:()=> list.appendChild(orderRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add item');
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(orderRow({text:''}))}, '➕ Add item');
     optHost.append(el('div',{className:'muted'},'Correct order is the list order here.'), list, add);
   }
 }
@@ -704,17 +704,18 @@ function renderQuestionList(){
     const title=el('span',{className:'q-title'}, q.question||'(untitled)');
     content.append(title);
     if(q.questionMedia?.image){ content.appendChild(el('img',{src:q.questionMedia.image,className:'tiny-thumb'})); }
-        if(q.questionMedia?.video){ content.appendChild(el('span',{className:'media-icon'},'Ã°ÂÂÂ¹')); }
+    if(q.questionMedia?.audio){ content.appendChild(el('span',{className:'media-icon'},'🔈')); }
+        if(q.questionMedia?.video){ content.appendChild(el('span',{className:'media-icon'},'📹')); }
     li.append(content);
     const actions=el('div',{className:'question-actions'});
-    const edit=el('button',{},'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ');
+    const edit=el('button',{},'✏️');
     edit.onclick=()=>{
       editingIndex=i;
       loadIntoEditor(q);
       showEditorForm();
       document.getElementById('editor').scrollIntoView({behavior:'smooth'});
     };
-    const del=el('button',{},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
+    const del=el('button',{},'🗑️'); del.onclick=()=>{ questions.splice(i,1); localStorage.setItem('quizData', JSON.stringify(questions)); renderQuestionList(); };
     actions.append(edit,del); li.append(actions); ul.append(li);
   });
   // drag reorder
@@ -733,9 +734,9 @@ document.getElementById('saveQuestion').onclick=()=>{
   const q=collectQuestion();
   if(q.type==='single'&& (q.correct==null||q.correct<0)) { alert(lang==='de'?'Markiere die richtige Antwort':'Mark the correct answer'); return; }
   if(q.type==='multiple'&& (!q.corrects||!q.corrects.length)) { alert(lang==='de'?'Markiere mindestens eine richtige':'Mark at least one correct'); return; }
-  if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert(lang==='de'?'FÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ge mindestens eine akzeptierte Antwort hinzu':'Add at least one acceptable'); return; }
-  if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert(lang==='de'?'FÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ge mindestens ein Paar hinzu':'Add at least one pair'); return; }
-  if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert(lang==='de'?'FÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ge mindestens zwei Elemente hinzu':'Add at least two items'); return; }
+  if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert(lang==='de'?'Füge mindestens eine akzeptierte Antwort hinzu':'Add at least one acceptable'); return; }
+  if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert(lang==='de'?'Füge mindestens ein Paar hinzu':'Add at least one pair'); return; }
+  if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert(lang==='de'?'Füge mindestens zwei Elemente hinzu':'Add at least two items'); return; }
   q.comment=document.getElementById('questionComment').value.trim();
   if(editingIndex>=0){ questions[editingIndex]=q; }
   else questions.push(q);
@@ -838,7 +839,7 @@ document.getElementById('tab-settings').onclick=()=>{ showTab('settings'); };
     }
     meta.categories = (meta.categories||[]).map(c=> c.label? c : {id:c.id, label:(c.labels?.en||c.labels?.de||c.id), hint:c.hint||''});
     localStorage.setItem('quizData', JSON.stringify(questions)); localStorage.setItem('quizMeta', JSON.stringify(meta));
-    renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
+    renderQuestionList(); renderCategorySelect(); renderCategoriesManager(); alert('Imported ✓'); }catch(err){ alert('Import failed: '+err.message); } }; r.readAsText(f); };
   }
   if(exportBtn){ exportBtn.onclick=()=>{ const payload={ categories: meta.categories, questions }; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='quiz.json'; a.click(); }; }
 })();
@@ -864,9 +865,10 @@ function showCurrent(){
   qc.innerHTML=''; qctrl.innerHTML='';
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
-  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const wrap=el('div',{className:'muted'}, cat.label||cat.id); if(cat.hint){ const hb=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},cat.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; wrap.append(' ',hb,ht); } qc.appendChild(wrap); } }
+  if(settings.showCategory && q.categoryId){ const cat=(meta.categories||[]).find(c=>c.id===q.categoryId); if(cat){ const wrap=el('div',{className:'muted'}, cat.label||cat.id); if(cat.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},cat.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; wrap.append(' ',hb,ht); } qc.appendChild(wrap); } }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
   if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
+  if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
     if(q.questionMedia?.video){ qc.appendChild(miniVideo(q.questionMedia.video)); }
 
   if(q.type==='single') renderPlaySingle(q, qc, qctrl);
@@ -877,12 +879,12 @@ function showCurrent(){
   else if(q.type==='multitext') renderPlayMultiText(q, qc, qctrl);
   if(settings.timeLimitSec>0){
     let remaining=settings.timeLimitSec;
-    const tEl=el('div',{id:'timer'}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ± '+remaining);
+    const tEl=el('div',{id:'timer'}, '⏱ '+remaining);
     qc.prepend(tEl);
     __playState.timerId=setInterval(()=>{
       remaining--;
       const elT=document.getElementById('timer');
-      if(elT) elT.textContent='ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ± '+remaining;
+      if(elT) elT.textContent='⏱ '+remaining;
       if(remaining<=0){
         clearInterval(__playState.timerId); __playState.timerId=null;
         proceed(false, q, t('time'));
@@ -926,7 +928,7 @@ function finalize(){
     const list=el('ul',{style:'list-style:none;padding-left:0'});
     __playState.results.forEach((r,i)=>{
       const li=el('li',{}, `${i+1}. ${r.q.question}`);
-      li.appendChild(el('span',{className:'muted'}, r.ok?' ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ':' ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ'));
+      li.appendChild(el('span',{className:'muted'}, r.ok?' ✓':' ✗'));
       const corr=describeCorrect(r.q);
       if(corr) li.appendChild(el('div',{className:'muted'}, corr));
       if(settings.showComments && (r.q.comment || r.q.commentMedia?.image || r.q.commentMedia?.audio || r.q.commentMedia?.video)){
@@ -962,10 +964,10 @@ function describeCorrect(q){
       const acc=q.acceptable||[]; const first=acc[0]; if(!first) return ''; const txt= typeof first==='object'? first.text : first; return (lang==='de'?'Korrekte Antwort: ':'Correct answer: ')+txt;
     }
     if(q.type==='matching'){
-      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ '+(p.right?.text||p.right||'(media)')); return (lang==='de'?'Paare: ':'Pairs: ')+lines.join(' | ');
+      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return (lang==='de'?'Paare: ':'Pairs: ')+lines.join(' | ');
     }
     if(q.type==='order'){
-      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return (lang==='de'?'Reihenfolge: ':'Order: ')+t.join(' ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ');
+      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return (lang==='de'?'Reihenfolge: ':'Order: ')+t.join(' → ');
     }
     if(q.type==='multitext'){
       const ans=(q.prompts||[]).map(p=> (p?.text||p||'')).filter(Boolean);
@@ -986,7 +988,7 @@ function renderPlaySingle(q, qc, qctrl){
     if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
     if(a.video) box.appendChild(miniVideo(a.video));
     if(a.hint){
-      const hintBtn = el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡');
+      const hintBtn = el('button',{className:'chip',type:'button'},'💡');
       const hintText = el('span',{className:'muted',style:'display:none;margin-left:6px'}, a.hint);
       hintBtn.onclick = ()=>{ hintText.style.display = (hintText.style.display==='none'?'inline':'none'); };
       box.appendChild(hintBtn);
@@ -1013,7 +1015,7 @@ function renderPlayMultiple(q, qc, qctrl){
     if(a.image) row.appendChild(el('img',{src:a.image,className:'thumb'}));
     if(a.audio) row.appendChild(miniAudio(a.audio,'Play'));
     if(a.video) row.appendChild(miniVideo(a.video));
-    if(a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
+    if(a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
     if(settings.autoTTSItems && a.text) row.onclick=()=>speak(a.text);
     qc.appendChild(row);
     return chk;
@@ -1044,9 +1046,9 @@ function renderPlayText(q, qc, qctrl){
   qc.appendChild(inp);
 
   const acceptable = (q.acceptable||[]).map(a => typeof a==='string' ? {text:a, hint:''} : a);
-  const hintAll = acceptable.map(a=>a.hint).filter(Boolean).join(' ÃÂ· ');
+  const hintAll = acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
   if(hintAll){
-    const hBtn = el('button',{className:'chip',type:'button'},'Ã°ÂÂÂ¡');
+    const hBtn = el('button',{className:'chip',type:'button'},'💡');
     const hTxt = el('span',{className:'muted',style:'display:none;margin-left:6px'}, hintAll);
     hBtn.onclick = ()=>{ hTxt.style.display = hTxt.style.display==='none' ? 'inline' : 'none'; };
     qc.append(hBtn,hTxt);
@@ -1078,7 +1080,7 @@ function renderPlayMatching(q, qc, qctrl){
     if(obj.text) card.appendChild(el('div',{},obj.text));
     if(obj.audio) card.appendChild(miniAudio(obj.audio,'Play'));
     if(obj.video) card.appendChild(miniVideo(obj.video));
-    if(obj.hint){ const hb=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; card.append(hb,ht); }
+    if(obj.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; card.append(hb,ht); }
     leftCol.appendChild(card);
   });
 
@@ -1088,7 +1090,7 @@ function renderPlayMatching(q, qc, qctrl){
     if(it.text) li.appendChild(el('div',{},it.text));
     if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
     if(it.video) li.appendChild(miniVideo(it.video));
-    if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); }
+    if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); }
     li.draggable=true; addDragHandlers(li,rightCol); rightCol.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
   });
@@ -1103,7 +1105,7 @@ function renderPlayOrder(q, qc, qctrl){
   const items=(q.sequence||[]).map((t,i)=> typeof t==='object'? Object.assign({key:String(i)},t) : {text:String(t||''), key:String(i)});
   const sh=shuffle(items.slice());
   const list=el('ul',{className:'sort-list'});
-  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
+  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
   qc.appendChild(list);
   const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
@@ -1117,7 +1119,7 @@ function renderPlayMultiText(q, qc, qctrl){
   const submit=()=>{ if(submitted) return; submitted=true; inputs.forEach(i=>i.disabled=true); s.disabled=true; proceed(check(), q); };
   prompts.forEach((p,idx)=>{
     if(p.hint){
-      const hb=el('button',{className:'chip',type:'button'},'Ã°ÂÂÂ¡');
+      const hb=el('button',{className:'chip',type:'button'},'💡');
       const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint);
       hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
       qc.append(hb,ht);
@@ -1163,9 +1165,9 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     const iFile=el('input',{type:'file',accept:'image/*',style:'display:none'});
     const aFile=el('input',{type:'file',accept:'audio/*',style:'display:none'});
     const vFile=el('input',{type:'file',accept:'video/*',style:'display:none'});
-    const iBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¼ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ'); iBtn.onclick=()=>iFile.click();
-    const aBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ'); aBtn.onclick=()=>aFile.click();
-    const vBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¹'); vBtn.onclick=()=>vFile.click();
+    const iBtn=el('button',{className:'chip',type:'button'},'🖼️'); iBtn.onclick=()=>iFile.click();
+    const aBtn=el('button',{className:'chip',type:'button'},'🔈'); aBtn.onclick=()=>aFile.click();
+    const vBtn=el('button',{className:'chip',type:'button'},'📹'); vBtn.onclick=()=>vFile.click();
     const preview=el('span',{});
     if(valueObj.image){ preview.appendChild(el('img',{src:valueObj.image,className:'thumb'})); row.dataset.img=valueObj.image; }
     if(valueObj.audio){ preview.appendChild(miniAudio(valueObj.audio,'Audio')); row.dataset.aud=valueObj.audio; }
@@ -1201,32 +1203,32 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
       const list=el('div',{id:'answersList'});
       const src = (data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
       src.forEach((ans,i)=> list.appendChild(buildAnswerRow(type, ans, i, data)) );
-      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add answer');
+      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
       optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
     }
     if(type==='text'){
       const list=el('div',{id:'txtAccept'});
       const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
       src.forEach(v=> list.appendChild(buildTextRow(v)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add acceptable');
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
       optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
     }
     if(type==='multitext'){
       const list=el('div',{id:'multiPrompts'});
       (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(buildTextRow(lbl)));
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add field');
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add field');
       optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
     }
     if(type==='matching'){
       const wrap=el('div',{id:'pairsWrap'});
       (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(buildPairRow(p)));
-      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add pair');
+      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
       optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT. Each side can have text, image, audio, and an optional hint.'), wrap, add);
     }
     if(type==='order'){
       const list=el('div',{id:'orderList'});
       (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(buildOrderRow(it)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, 'ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Add item');
+      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
       optHost.append(el('div',{className:'muted'},'The correct order is the editor order. Items can include text, image, audio, and an optional hint.'), list, add);
     }
   }
@@ -1323,8 +1325,8 @@ function addDragHandlers(li, list){ li.addEventListener('dragstart',e=>{ li.clas
     qc.appendChild(inp);
     inp.focus();
     const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
-    const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ· ');
-    if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
+    const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
+    if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
     const check=()=>{
       const u=normalizeText(inp.value);
       if(acceptable.some(a=> normalizeText(a.text)===u)) return {ok:true};
