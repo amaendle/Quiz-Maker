@@ -28,6 +28,7 @@
   .media-icon{margin-left:6px;font-size:18px;vertical-align:middle}
   .question-actions{position:absolute;right:8px;top:8px;display:flex;gap:6px}
   .q-content{display:flex;align-items:center;gap:6px}
+  .cat-id{color:var(--muted);font-size:0.8em;margin-right:4px}
   .banner{padding:10px 12px;border-radius:10px;margin-top:12px}
   .banner.ok{background:#e8f5e9;color:#1b5e20;border:1px solid #b7e1c0}
   .banner.err{background:#ffebee;color:#b71c1c;border:1px solid #f3b0b5}
@@ -754,6 +755,9 @@ function renderQuestionList(){
     const li=el('li',{className:'question-item'});
     li.dataset.index=i;
     const content=el('div',{className:'q-content'});
+    if(settings.showCategory && q.categoryId){
+      content.append(el('span',{className:'cat-id'},`[${q.categoryId}]`));
+    }
     const title=el('span',{className:'q-title'}, q.question||'(untitled)');
     content.append(title);
     if(q.questionMedia?.image){ content.appendChild(el('img',{src:q.questionMedia.image,className:'tiny-thumb'})); }
@@ -872,6 +876,7 @@ document.getElementById('saveSettings').onclick=()=>{
   renderCategorySelect();
   renderCategoriesManager();
   updateHintInputsVisibility();
+  renderQuestionList();
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
