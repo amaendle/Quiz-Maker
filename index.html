@@ -333,6 +333,9 @@ function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(set
 let __keyHandlers=[];
 function addKeyHandler(fn){ document.addEventListener('keydown', fn); __keyHandlers.push(fn); }
 function clearKeyHandlers(){ __keyHandlers.forEach(h=>document.removeEventListener('keydown',h)); __keyHandlers=[]; }
+let __ptrHandlers=[];
+function addPointerHandler(fn){ document.addEventListener('pointerdown', fn); __ptrHandlers.push(fn); }
+function clearPointerHandlers(){ __ptrHandlers.forEach(h=>document.removeEventListener('pointerdown',h)); __ptrHandlers=[]; }
 
 // ===== Helpers =====
 function el(tag, props={}, ...kids){ const n=document.createElement(tag); Object.assign(n, props); kids.forEach(k=> n.append(k?.nodeType? k : (k??''))); return n; }
@@ -921,6 +924,7 @@ function startQuiz(){
 function showCurrent(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
+  clearPointerHandlers();
   qc.innerHTML=''; qctrl.innerHTML='';
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
@@ -970,6 +974,7 @@ function showCurrent(){
 function proceed(ok, q, msg='', opts={}){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
+  clearPointerHandlers();
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   __playState.results.push({q, ok});
   if(settings.feedbackImmediate){
@@ -1189,6 +1194,18 @@ function renderPlayMatching(q, qc, qctrl){
       leftItems[i].style.height=rightItems[i].style.height=h+'px';
     }
   };
+  let selIndex=-1;
+  const clearSel=()=>{
+    if(selIndex>=0){
+      const items=[...rightCol.children];
+      if(items[selIndex]) items[selIndex].classList.remove('selected');
+      selIndex=-1;
+    }
+  };
+  addPointerHandler(e=>{
+    const items=[...rightCol.children];
+    if(selIndex>=0 && items[selIndex] && !items[selIndex].contains(e.target)) clearSel();
+  });
 
   leftObjs.forEach(obj=>{
     const card=el('div',{className:'question-item',style:'cursor:default'});
@@ -1212,14 +1229,16 @@ function renderPlayMatching(q, qc, qctrl){
       hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; syncHeights(); };
       li.append(hb,ht);
     }
-    li.draggable=true; addDragHandlers(li,rightCol,syncHeights); rightCol.appendChild(li);
+    li.draggable=true; addDragHandlers(li,rightCol,syncHeights);
+    li.addEventListener('dragstart', clearSel);
+    li.addEventListener('touchstart', clearSel);
+    rightCol.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
   });
 
   grid.append(leftCol,rightCol); qc.appendChild(grid);
   syncHeights();
   window.addEventListener('resize', syncHeights);
-  let selIndex=-1;
   const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
   qctrl.appendChild(s);
@@ -1253,9 +1272,37 @@ function renderPlayOrder(q, qc, qctrl){
   const items=(q.sequence||[]).map((t,i)=> typeof t==='object'? Object.assign({key:String(i)},t) : {text:String(t||''), key:String(i)});
   const sh=shuffle(items.slice());
   const list=el('ul',{className:'sort-list'});
-  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(settings.showAnswerHints && it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
-  qc.appendChild(list);
   let selIndex=-1;
+  const clearSel=()=>{
+    if(selIndex>=0){
+      const its=[...list.children];
+      if(its[selIndex]) its[selIndex].classList.remove('selected');
+      selIndex=-1;
+    }
+  };
+  addPointerHandler(e=>{
+    const its=[...list.children];
+    if(selIndex>=0 && its[selIndex] && !its[selIndex].contains(e.target)) clearSel();
+  });
+  sh.forEach(it=>{
+    const li=el('li',{}); li.dataset.key=it.key;
+    if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'}));
+    if(it.text) li.appendChild(el('div',{},it.text));
+    if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
+    if(it.video) li.appendChild(miniVideo(it.video));
+    if(settings.showAnswerHints && it.hint){
+      const hb=el('button',{className:'chip',type:'button'},'💡');
+      const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint);
+      hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
+      li.append(hb,ht);
+    }
+    li.draggable=true; addDragHandlers(li,list);
+    li.addEventListener('dragstart', clearSel);
+    li.addEventListener('touchstart', clearSel);
+    list.appendChild(li);
+    if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
+  });
+  qc.appendChild(list);
   const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
   qctrl.appendChild(s);
