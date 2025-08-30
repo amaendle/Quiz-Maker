@@ -1230,8 +1230,10 @@ function renderPlayMatching(q, qc, qctrl){
       li.append(hb,ht);
     }
     li.draggable=true; addDragHandlers(li,rightCol,syncHeights);
-    li.addEventListener('dragstart', clearSel);
-    li.addEventListener('touchstart', clearSel);
+    li.addEventListener('dragstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('dragend',()=>{ li.classList.remove('selected'); });
+    li.addEventListener('touchstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('touchend',()=>{ li.classList.remove('selected'); });
     rightCol.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
   });
@@ -1297,8 +1299,10 @@ function renderPlayOrder(q, qc, qctrl){
       li.append(hb,ht);
     }
     li.draggable=true; addDragHandlers(li,list);
-    li.addEventListener('dragstart', clearSel);
-    li.addEventListener('touchstart', clearSel);
+    li.addEventListener('dragstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('dragend',()=>{ li.classList.remove('selected'); });
+    li.addEventListener('touchstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('touchend',()=>{ li.classList.remove('selected'); });
     list.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
   });
