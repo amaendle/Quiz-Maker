@@ -935,7 +935,11 @@ function showCurrent(){
       const wrap=el('div',{className:'muted'}, cat.label||cat.id);
       qc.appendChild(wrap);
       const cm=cat.comment||cat.hint;
-      if(cm) qc.appendChild(el('p',{className:'muted'}, cm));
+      if(cm){
+        const p=el('p',{className:'muted'});
+        if(settings.linkifyComments) p.appendChild(linkifyText(cm)); else p.textContent=cm;
+        qc.appendChild(p);
+      }
     }
   }
   const title=el('h3',{}, q.question); title.onclick=()=>speak(q.question); qc.appendChild(title); if(settings.autoTTSQuestions) speak(q.question);
@@ -1029,6 +1033,17 @@ function finalize(){
 // Media-aware renderer for items
 function renderPlayItem(item){ const box=el('div',{}); const text=(item?.text??''); const img=(item?.image||''); const aud=(item?.audio||''); const vid=(item?.video||''); if(img) box.appendChild(el('img',{src:img,className:'thumb'})); if(text) box.appendChild(el('div',{}, text)); if(aud) box.appendChild(miniAudio(aud,'Play')); if(vid) box.appendChild(miniVideo(vid)); box.addEventListener('click',ev=> maybeSpeakItemText(text, ev.target)); return box; }
 
+// Compact renderer for feedback lines
+function renderTinyItem(item){
+  const obj = (typeof item==='object') ? item : {text:String(item||'')};
+  const span = el('span',{style:'display:inline-flex;align-items:center;gap:4px'});
+  if(obj.image) span.appendChild(el('img',{src:obj.image,className:'tiny-thumb'}));
+  if(obj.text) span.appendChild(document.createTextNode(obj.text));
+  if(obj.audio){ const a=miniAudio(obj.audio,''); a.textContent='▶'; a.style.padding='0 4px'; a.style.fontSize='12px'; a.style.gap='0'; span.appendChild(a); }
+  if(obj.video){ const v=miniVideo(obj.video); v.className='tiny-thumb'; v.controls=false; v.removeAttribute('controls'); v.style.width='24px'; v.style.height='24px'; span.appendChild(v); }
+  return span;
+}
+
 // ===== Helpers for feedback =====
 function describeCorrect(q){
   try{
@@ -1043,10 +1058,26 @@ function describeCorrect(q){
       const acc=q.acceptable||[]; const first=acc[0]; if(!first) return ''; const txt= typeof first==='object'? first.text : first; return (lang==='de'?'Korrekte Antwort: ':'Correct answer: ')+txt;
     }
     if(q.type==='matching'){
-      const pairs=q.pairs||[]; const lines=pairs.map(p=> (p.left?.text||p.left||'(media)')+' → '+(p.right?.text||p.right||'(media)')); return (lang==='de'?'Paare: ':'Pairs: ')+lines.join(' | ');
+      const pairs=q.pairs||[];
+      const frag=document.createDocumentFragment();
+      frag.append(lang==='de'?'Paare: ':'Pairs: ');
+      pairs.forEach((p,i)=>{
+        frag.appendChild(renderTinyItem(p.left));
+        frag.append(' → ');
+        frag.appendChild(renderTinyItem(p.right));
+        if(i<pairs.length-1) frag.append(' | ');
+      });
+      return frag;
     }
     if(q.type==='order'){
-      const seq=q.sequence||[]; const t=seq.map(s=> s?.text||s||'(media)'); return (lang==='de'?'Reihenfolge: ':'Order: ')+t.join(' → ');
+      const seq=q.sequence||[];
+      const frag=document.createDocumentFragment();
+      frag.append(lang==='de'?'Reihenfolge: ':'Order: ');
+      seq.forEach((s,i)=>{
+        frag.appendChild(renderTinyItem(s));
+        if(i<seq.length-1) frag.append(' → ');
+      });
+      return frag;
     }
     if(q.type==='multitext'){
       const ans=(q.prompts||[]).map(p=> (p?.text||p||'')).filter(Boolean);
