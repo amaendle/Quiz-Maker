@@ -176,6 +176,7 @@
 
     <h3 id="playModeHeading">Play mode</h3>
     <label><input type="checkbox" id="showCategory"> <span id="showCategoryLabel">Show category during play</span></label>
+    <label><input type="checkbox" id="showCategoryId"> <span id="showCategoryIdLabel">Show category IDs in editor</span></label>
     <label><input type="checkbox" id="allowSkip"> <span id="allowSkipLabel">Allow skipping questions</span></label>
     <label><input type="checkbox" id="singleImmediateSubmit" checked> <span id="singleImmediateSubmitLabel">Immediate submit for single choice</span></label>
 
@@ -207,6 +208,7 @@ let settings = Object.assign({
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false,
   showCorrectImmediate:true,
   showCategory:false,
+  showCategoryId:false,
   allowSkip:false,
   singleImmediateSubmit:true,
   showAnswerHints:false
@@ -296,6 +298,7 @@ function applyLang(){
     'autoTTSItemsLabel': lang==='de'?'Automatische TTS für Elemente/Optionen':'Auto-TTS items/options',
     'playModeHeading': lang==='de'?'Spielmodus':'Play mode',
     'showCategoryLabel': lang==='de'?'Kategorie während des Spiels anzeigen':'Show category during play',
+    'showCategoryIdLabel': lang==='de'?'Kategorie-IDs im Editor anzeigen':'Show category IDs in editor',
     'allowSkipLabel': lang==='de'?'überspringen von Fragen erlauben':'Allow skipping questions',
     'singleImmediateSubmitLabel': lang==='de'?'Sofort senden bei Einzelwahl':'Immediate submit for single choice',
     'catsToggle': lang==='de'?'Kategorien / Themen / Mottos':'Categories / Topics / Mottos',
@@ -755,7 +758,7 @@ function renderQuestionList(){
     const li=el('li',{className:'question-item'});
     li.dataset.index=i;
     const content=el('div',{className:'q-content'});
-    if(settings.showCategory && q.categoryId){
+    if(settings.showCategoryId && q.categoryId){
       content.append(el('span',{className:'cat-id'},`[${q.categoryId}]`));
     }
     const title=el('span',{className:'q-title'}, q.question||'(untitled)');
@@ -824,7 +827,7 @@ function applySettingsToUI(){
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
   document.getElementById('caseSensitive').checked=settings.caseSensitive; document.getElementById('ignorePunct').checked=settings.ignorePunct; document.getElementById('normalizeAccents').checked=settings.normalizeAccents; document.getElementById('ignoreSpaces').checked=settings.ignoreSpaces; document.getElementById('regexFull').checked=settings.regexFull; document.getElementById('mcqScore').value=settings.mcqScore; document.getElementById('autoTTSQuestions').checked=settings.autoTTSQuestions; document.getElementById('autoTTSItems').checked=settings.autoTTSItems; document.getElementById('showCorrectImmediate').checked=settings.showCorrectImmediate;
-  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip; document.getElementById('singleImmediateSubmit').checked=settings.singleImmediateSubmit; document.getElementById('showAnswerHints').checked=settings.showAnswerHints;
+  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('showCategoryId').checked=settings.showCategoryId; document.getElementById('allowSkip').checked=settings.allowSkip; document.getElementById('singleImmediateSubmit').checked=settings.singleImmediateSubmit; document.getElementById('showAnswerHints').checked=settings.showAnswerHints;
   renderCategorySelect();
   renderCategoriesManager();
   applyLang();
@@ -868,6 +871,7 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.autoTTSItems=document.getElementById('autoTTSItems').checked;
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
   settings.showCategory=document.getElementById('showCategory').checked;
+  settings.showCategoryId=document.getElementById('showCategoryId').checked;
   settings.allowSkip=document.getElementById('allowSkip').checked;
   settings.singleImmediateSubmit=document.getElementById('singleImmediateSubmit').checked;
   settings.showAnswerHints=document.getElementById('showAnswerHints').checked;
