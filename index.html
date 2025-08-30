@@ -33,6 +33,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .sort-list{list-style:none;padding:0;margin:0}
   .sort-list li{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafafa;position:relative}
+  .sort-list li.selected{outline:2px solid var(--accent)}
   .opt{display:block;width:100%;text-align:left;margin:6px 0}
   .thumb{max-width:100%;max-height:160px;border-radius:8px;display:block}
   .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
@@ -84,6 +85,9 @@
       </select>
 
       <div id="questionOptionsContainer" style="margin-top:10px"></div>
+
+      <label id="questionHintLabel">Question hint (optional)</label>
+      <input type="text" id="questionHint" placeholder="Shown when hint requested"/>
 
       <label id="commentLabel">Comment (optional)</label>
       <textarea id="questionComment" placeholder="Shown with feedback when enabled"></textarea>
@@ -173,6 +177,10 @@
     <h3 id="playModeHeading">Play mode</h3>
     <label><input type="checkbox" id="showCategory"> <span id="showCategoryLabel">Show category during play</span></label>
     <label><input type="checkbox" id="allowSkip"> <span id="allowSkipLabel">Allow skipping questions</span></label>
+    <label><input type="checkbox" id="singleImmediateSubmit" checked> <span id="singleImmediateSubmitLabel">Immediate submit for single choice</span></label>
+
+    <h3 id="experimentalHeading">Experimental features</h3>
+    <label><input type="checkbox" id="showAnswerHints"> <span id="showAnswerHintsLabel">Show answer hint buttons</span></label>
 
     <h3><button id="catsToggle" class="btn" type="button">Categories / Topics / Mottos</button></h3>
     <div id="catsPanel"><div id="catsManager"></div></div>
@@ -199,7 +207,9 @@ let settings = Object.assign({
   mcqScore:'all', autoTTSQuestions:false, autoTTSItems:false, autoValidate:true,
   showCorrectImmediate:true,
   showCategory:false,
-  allowSkip:false
+  allowSkip:false,
+  singleImmediateSubmit:true,
+  showAnswerHints:false
 }, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
 if('feedback' in settings){
   settings.feedbackImmediate = settings.feedback === 'immediate';
@@ -236,6 +246,8 @@ function applyLang(){
     'questionTypeMultitext': lang==='de'?'Mehrere Texteingaben':'Multiple Text Inputs',
     'questionTypeMatching': lang==='de'?'Zuordnen (rechts ziehen)':'Matching (drag right)',
     'questionTypeOrder': lang==='de'?'In die richtige Reihenfolge bringen':'Put in the right order',
+    'questionHintLabel': lang==='de'?'Fragehinweis (optional)':'Question hint (optional)',
+    'questionHint': {placeholder: lang==='de'?'Wird bei Hinweis angezeigt':'Shown when hint requested'},
     'commentLabel': lang==='de'?'Kommentar (optional)':'Comment (optional)',
     'questionComment': {placeholder: lang==='de'?'Wird bei Feedback angezeigt, wenn aktiviert':'Shown with feedback when enabled'},
     'cImgPick': lang==='de'?'🖼️ Bild':'🖼️ Image',
@@ -287,9 +299,12 @@ function applyLang(){
     'playModeHeading': lang==='de'?'Spielmodus':'Play mode',
     'showCategoryLabel': lang==='de'?'Kategorie während des Spiels anzeigen':'Show category during play',
     'allowSkipLabel': lang==='de'?'überspringen von Fragen erlauben':'Allow skipping questions',
+    'singleImmediateSubmitLabel': lang==='de'?'Sofort senden bei Einzelwahl':'Immediate submit for single choice',
     'catsToggle': lang==='de'?'Kategorien / Themen / Mottos':'Categories / Topics / Mottos',
     'saveSettings': lang==='de'?'Einstellungen speichern':'Save settings',
-    'settingsSaved': lang==='de'?'Gespeichert ✓':'Saved ✓'
+    'settingsSaved': lang==='de'?'Gespeichert ✓':'Saved ✓',
+    'experimentalHeading': lang==='de'?'Experimentelle Funktionen':'Experimental features',
+    'showAnswerHintsLabel': lang==='de'?'Antwort-Hinweis-Schaltflächen anzeigen':'Show answer hint buttons'
   };
   const specials={
     themeLabel:tx.themeLabel,
@@ -318,6 +333,9 @@ function saveSettings(){ localStorage.setItem('quizSettings', JSON.stringify(set
 let __keyHandlers=[];
 function addKeyHandler(fn){ document.addEventListener('keydown', fn); __keyHandlers.push(fn); }
 function clearKeyHandlers(){ __keyHandlers.forEach(h=>document.removeEventListener('keydown',h)); __keyHandlers=[]; }
+let __ptrHandlers=[];
+function addPointerHandler(fn){ document.addEventListener('pointerdown', fn); __ptrHandlers.push(fn); }
+function clearPointerHandlers(){ __ptrHandlers.forEach(h=>document.removeEventListener('pointerdown',h)); __ptrHandlers=[]; }
 
 // ===== Helpers =====
 function el(tag, props={}, ...kids){ const n=document.createElement(tag); Object.assign(n, props); kids.forEach(k=> n.append(k?.nodeType? k : (k??''))); return n; }
@@ -555,7 +573,16 @@ function answerRow(type, valueObj={}, idx, data){
   row.append(correct,txt,hint,mediaRow,del);
   return row;
 }
-function textRow(value){ const obj=(typeof value==='object'&&value)?value:{text:value||'',hint:''}; const r=el('div',{className:'row'}); const i=el('input',{type:'text',value:obj.text||'',placeholder:'Text'}); const h=el('input',{type:'text',value:obj.hint||'',placeholder:'Hint (optional)'}); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(i,h,d); return r; }
+function textRow(value){
+  const obj=(typeof value==='object'&&value)?value:{text:value||'',label:'',hint:''};
+  const r=el('div',{className:'row'});
+  if('label' in obj){ const lbl=el('input',{type:'text',value:obj.label||'',placeholder:'Label (optional)'}); r.appendChild(lbl); }
+  const i=el('input',{type:'text',value:obj.text||'',placeholder:'Text'});
+  const h=el('input',{type:'text',value:obj.hint||'',placeholder:'Hint (optional)'});
+  const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+  r.append(i,h,d);
+  return r;
+}
 function pairRow(p){ const r=el('div',{className:'row pair'});
   // LEFT
   const left=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
@@ -594,8 +621,8 @@ function renderOptionsEditor(data={}){
   }
   if(type==='multitext'){
     const list=el('div',{id:'multiPrompts'});
-    (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(textRow(lbl)) );
-    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:''}))}, '➕ Add field');
+    (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1',label:''},{text:'Answer 2',label:''}]).forEach(p=> list.appendChild(textRow(p)) );
+    const add=el('button',{className:'btn',onclick:()=> list.appendChild(textRow({text:'',label:'',hint:''}))}, '➕ Add field');
     optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
   }
   if(type==='matching'){
@@ -618,7 +645,7 @@ renderOptionsEditor();
 // Gather editor data
 function collectQuestion(){
   const type=qTypeSel.value; const question=document.getElementById('questionText').value.trim();
-  const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
+  const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
   const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
   if(type==='single' || type==='multiple'){
     const rows=[...optHost.querySelectorAll('#answersList .arow')];
@@ -627,7 +654,13 @@ function collectQuestion(){
     else { const corrects=rows.map((r,i)=> r.querySelector('input[type="checkbox"]').checked? i : -1).filter(i=>i!==-1); Object.assign(q,{answers,corrects}); }
   }
   if(type==='text'){ q.acceptable=[...optHost.querySelectorAll('#txtAccept input[type="text"]')].map(i=>i.value.trim()).filter(Boolean); }
-  if(type==='multitext'){ q.prompts=[...optHost.querySelectorAll('#multiPrompts input[type="text"]')].map(i=>i.value.trim()).filter(Boolean); }
+  if(type==='multitext'){
+    q.prompts=[...optHost.querySelectorAll('#multiPrompts .row')].map(r=>({
+      text:r.querySelector('input[placeholder="Text"]').value.trim(),
+      label:(r.querySelector('input[placeholder="Label (optional)"]')?.value||'').trim(),
+      hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim()
+    })).filter(o=>o.text);
+  }
   if(type==='matching'){
     q.pairs=[...optHost.querySelectorAll('#pairsWrap .pair')].map(row=>{
       const leftWrap=row.children[0];
@@ -655,6 +688,7 @@ function collectQuestion(){
 // Load into editor (incl. media)
 function loadIntoEditor(q){
   document.getElementById('questionText').value=q.question||'';
+  document.getElementById('questionHint').value=q.hint||'';
   document.getElementById('questionComment').value=q.comment||'';
   qImgData=q.questionMedia?.image||''; qAudData=q.questionMedia?.audio||''; qVidData=q.questionMedia?.video||''; cImgData=q.commentMedia?.image||''; cAudData=q.commentMedia?.audio||''; cVidData=q.commentMedia?.video||'';
   if(qImgData){ qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; } else { qImgPrev.style.display='none'; qImgClear.style.display='none'; }
@@ -669,6 +703,7 @@ function loadIntoEditor(q){
 
 function clearEditorFields(){
   document.getElementById('questionText').value='';
+  document.getElementById('questionHint').value='';
   document.getElementById('questionComment').value='';
   qImg.value=''; qAud.value=''; qVid.value=''; cImg.value=''; cAud.value=''; cVid.value='';
   qImgData=qAudData=qVidData=cImgData=cAudData=cVidData='';
@@ -754,6 +789,7 @@ document.getElementById('saveQuestion').onclick=()=>{
   if(q.type==='text'&& (!q.acceptable||!q.acceptable.length)) { alert(lang==='de'?'Füge mindestens eine akzeptierte Antwort hinzu':'Add at least one acceptable'); return; }
   if(q.type==='matching'&& (!q.pairs||!q.pairs.length)) { alert(lang==='de'?'Füge mindestens ein Paar hinzu':'Add at least one pair'); return; }
   if(q.type==='order'&& (!q.sequence||q.sequence.length<2)) { alert(lang==='de'?'Füge mindestens zwei Elemente hinzu':'Add at least two items'); return; }
+  q.hint=document.getElementById('questionHint').value.trim();
   q.comment=document.getElementById('questionComment').value.trim();
   if(editingIndex>=0){ questions[editingIndex]=q; }
   else questions.push(q);
@@ -782,10 +818,11 @@ function applySettingsToUI(){
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
   document.getElementById('caseSensitive').checked=settings.caseSensitive; document.getElementById('ignorePunct').checked=settings.ignorePunct; document.getElementById('normalizeAccents').checked=settings.normalizeAccents; document.getElementById('ignoreSpaces').checked=settings.ignoreSpaces; document.getElementById('regexFull').checked=settings.regexFull; document.getElementById('mcqScore').value=settings.mcqScore; document.getElementById('autoTTSQuestions').checked=settings.autoTTSQuestions; document.getElementById('autoTTSItems').checked=settings.autoTTSItems; document.getElementById('showCorrectImmediate').checked=settings.showCorrectImmediate;
-  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip;
+  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip; document.getElementById('singleImmediateSubmit').checked=settings.singleImmediateSubmit; document.getElementById('showAnswerHints').checked=settings.showAnswerHints;
   renderCategorySelect();
   renderCategoriesManager();
   applyLang();
+  updateHintInputsVisibility();
 }
 applySettingsToUI();
 
@@ -798,6 +835,11 @@ if(catsToggle && catsPanel){
     else { catsPanel.style.maxHeight=catsPanel.scrollHeight+'px'; }
   };
 }
+
+document.getElementById('showAnswerHints').addEventListener('change',e=>{
+  settings.showAnswerHints=e.target.checked;
+  updateHintInputsVisibility();
+});
 
 document.getElementById('saveSettings').onclick=()=>{
   settings.feedbackImmediate=document.getElementById('feedbackImmediate').checked;
@@ -822,10 +864,13 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
   settings.showCategory=document.getElementById('showCategory').checked;
   settings.allowSkip=document.getElementById('allowSkip').checked;
+  settings.singleImmediateSubmit=document.getElementById('singleImmediateSubmit').checked;
+  settings.showAnswerHints=document.getElementById('showAnswerHints').checked;
   document.documentElement.lang = settings.lang || 'en';
   applyLang();
   renderCategorySelect();
   renderCategoriesManager();
+  updateHintInputsVisibility();
   saveSettings();
   const s=document.getElementById('settingsSaved');
   s.style.display='inline';
@@ -879,6 +924,7 @@ function startQuiz(){
 function showCurrent(){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
+  clearPointerHandlers();
   qc.innerHTML=''; qctrl.innerHTML='';
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   const q=__playState.pool[__playState.idx]; if(!q){ finalize(); return; }
@@ -895,6 +941,12 @@ function showCurrent(){
   if(q.questionMedia?.image){ qc.appendChild(el('img',{src:q.questionMedia.image,className:'thumb'})); }
   if(q.questionMedia?.audio){ qc.appendChild(miniAudio(q.questionMedia.audio,'Question audio')); }
     if(q.questionMedia?.video){ qc.appendChild(miniVideo(q.questionMedia.video)); }
+  if(q.hint){
+    const hb=el('button',{className:'chip',type:'button'},'💡');
+    const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},q.hint);
+    hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
+    qc.append(hb,ht);
+  }
 
   if(q.type==='single') renderPlaySingle(q, qc, qctrl);
   else if(q.type==='multiple') renderPlayMultiple(q, qc, qctrl);
@@ -922,6 +974,7 @@ function showCurrent(){
 function proceed(ok, q, msg='', opts={}){
   const qc=document.getElementById('quizContainer'); const qctrl=document.getElementById('quizControls');
   clearKeyHandlers();
+  clearPointerHandlers();
   if(__playState.timerId){ clearInterval(__playState.timerId); __playState.timerId=null; }
   __playState.results.push({q, ok});
   if(settings.feedbackImmediate){
@@ -1004,50 +1057,61 @@ function describeCorrect(q){
 // ===== Play renderers + validation =====
 function renderPlaySingle(q, qc, qctrl){
   q.answers = (q.answers||[]);
-  const btns=[];
-  let chosen=-1;
-  let submitted=false;
-  const submit=()=>{
-    if(submitted) return;
-    submitted=true;
-    btns.forEach(b=>b.disabled=true);
-    proceed(chosen===q.correct, q);
-  };
-  let submitBtn=null;
-  q.answers.forEach((a,i)=>{
-    const b = el('button',{className:'btn opt'});
-    const box = el('div',{});
-    if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
-    if(a.text) box.appendChild(el('div',{}, a.text));
-    if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
-    if(a.video) box.appendChild(miniVideo(a.video));
-    if(a.hint){
-      const hintBtn = el('button',{className:'chip',type:'button'},'💡');
-      const hintText = el('span',{className:'muted',style:'display:none;margin-left:6px'}, a.hint);
-      hintBtn.onclick = ()=>{ hintText.style.display = (hintText.style.display==='none'?'inline':'none'); };
-      box.appendChild(hintBtn);
-      box.appendChild(hintText);
-    }
-    b.appendChild(box);
-    b.onclick = ()=>{
-      if(submitted) return;
-      if(settings.autoTTSItems && a.text) speak(a.text);
-      chosen=i;
-      if(settings.autoValidate){
-        submit();
-      }else{
-        btns.forEach(btn=>btn.classList.remove('selected'));
-        b.classList.add('selected');
-        if(!submitBtn){
-          submitBtn=el('button',{className:'btn btn-primary'}, t('submit'));
-          submitBtn.onclick=submit;
-          qctrl.appendChild(submitBtn);
-        }
+  if(settings.singleImmediateSubmit){
+    const btns=[];
+    q.answers.forEach((a,i)=>{
+      const b=el('button',{className:'btn opt'});
+      const box=el('div',{});
+      if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
+      if(a.text) box.appendChild(el('div',{},a.text));
+      if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
+      if(a.video) box.appendChild(miniVideo(a.video));
+      if(settings.showAnswerHints && a.hint){
+        const hintBtn=el('button',{className:'chip',type:'button'},'💡');
+        const hintText=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint);
+        hintBtn.onclick=()=>{ hintText.style.display=hintText.style.display==='none'?'inline':'none'; };
+        box.append(hintBtn,hintText);
       }
-    };
-    qc.appendChild(b); btns.push(b);
-  });
-  addKeyHandler(e=>{ const idx=parseInt(e.key,10)-1; if(idx>=0 && idx<btns.length) btns[idx].click(); });
+      b.appendChild(box);
+      b.onclick=()=>{
+        if(settings.autoTTSItems && a.text) speak(a.text);
+        btns.forEach(btn=>btn.disabled=true);
+        proceed(i===q.correct,q);
+      };
+      qc.appendChild(b); btns.push(b);
+    });
+    addKeyHandler(e=>{ const idx=parseInt(e.key,10)-1; if(idx>=0 && idx<btns.length) btns[idx].click(); });
+  } else {
+    const radios=[];
+    q.answers.forEach((a,i)=>{
+      const wrap=el('label',{});
+      const r=el('input',{type:'radio',name:'scq'});
+      wrap.appendChild(r);
+      if(a.text) wrap.appendChild(el('span',{},' ',a.text));
+      if(a.image) wrap.appendChild(el('img',{src:a.image,className:'thumb'}));
+      if(a.audio) wrap.appendChild(miniAudio(a.audio,'Play'));
+      if(a.video) wrap.appendChild(miniVideo(a.video));
+      if(settings.showAnswerHints && a.hint){
+        const hBtn=el('button',{className:'chip',type:'button'},'💡');
+        const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint);
+        hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; };
+        wrap.append(hBtn,hTxt);
+      }
+      if(settings.autoTTSItems && a.text) wrap.onclick=()=>speak(a.text);
+      qc.appendChild(wrap);
+      radios.push(r);
+    });
+    const s=el('button',{className:'btn btn-primary'}, t('submit'));
+    s.onclick=()=>{ const chosen=radios.findIndex(r=>r.checked); proceed(chosen===q.correct,q); };
+    qctrl.appendChild(s);
+    addKeyHandler(e=>{
+      if(e.key>='1' && e.key<='9'){
+        const idx=parseInt(e.key,10)-1; if(radios[idx]) radios[idx].checked=true;
+      } else if(e.key==='Enter'){
+        e.preventDefault(); e.stopPropagation(); s.click();
+      }
+    });
+  }
 }
 
 function renderPlayMultiple(q, qc, qctrl){
@@ -1060,7 +1124,7 @@ function renderPlayMultiple(q, qc, qctrl){
     if(a.image) row.appendChild(el('img',{src:a.image,className:'thumb'}));
     if(a.audio) row.appendChild(miniAudio(a.audio,'Play'));
     if(a.video) row.appendChild(miniVideo(a.video));
-    if(a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
+    if(settings.showAnswerHints && a.hint){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; row.append(hBtn,hTxt); }
     if(settings.autoTTSItems && a.text) row.onclick=()=>speak(a.text);
     qc.appendChild(row);
     return chk;
@@ -1092,7 +1156,7 @@ function renderPlayText(q, qc, qctrl){
 
   const acceptable = (q.acceptable||[]).map(a => typeof a==='string' ? {text:a, hint:''} : a);
   const hintAll = acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
-  if(hintAll){
+  if(settings.showAnswerHints && hintAll){
     const hBtn = el('button',{className:'chip',type:'button'},'💡');
     const hTxt = el('span',{className:'muted',style:'display:none;margin-left:6px'}, hintAll);
     hBtn.onclick = ()=>{ hTxt.style.display = hTxt.style.display==='none' ? 'inline' : 'none'; };
@@ -1118,58 +1182,174 @@ function renderPlayMatching(q, qc, qctrl){
   const grid = el('div',{className:'grid2'});
   const leftCol = el('div',{});
   const rightCol = el('ul',{className:'sort-list'});
+  const syncHeights=()=>{
+    const leftItems=[...leftCol.children];
+    const rightItems=[...rightCol.children];
+    const n=Math.min(leftItems.length,rightItems.length);
+    for(let i=0;i<n;i++){
+      leftItems[i].style.height=rightItems[i].style.height='auto';
+    }
+    for(let i=0;i<n;i++){
+      const h=Math.max(leftItems[i].offsetHeight,rightItems[i].offsetHeight);
+      leftItems[i].style.height=rightItems[i].style.height=h+'px';
+    }
+  };
+  let selIndex=-1;
+  const clearSel=()=>{
+    if(selIndex>=0){
+      const items=[...rightCol.children];
+      if(items[selIndex]) items[selIndex].classList.remove('selected');
+      selIndex=-1;
+    }
+  };
+  addPointerHandler(e=>{
+    const items=[...rightCol.children];
+    if(selIndex>=0 && items[selIndex] && !items[selIndex].contains(e.target)) clearSel();
+  });
 
   leftObjs.forEach(obj=>{
     const card=el('div',{className:'question-item',style:'cursor:default'});
-    if(obj.image) card.appendChild(el('img',{src:obj.image,className:'thumb'}));
+    if(obj.image){ const img=el('img',{src:obj.image,className:'thumb'}); img.onload=syncHeights; card.appendChild(img); }
     if(obj.text) card.appendChild(el('div',{},obj.text));
-    if(obj.audio) card.appendChild(miniAudio(obj.audio,'Play'));
-    if(obj.video) card.appendChild(miniVideo(obj.video));
-    if(obj.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; card.append(hb,ht); }
+    if(obj.audio){ const a=miniAudio(obj.audio,'Play'); a.onloadedmetadata=syncHeights; card.appendChild(a); }
+    if(obj.video){ const v=miniVideo(obj.video); v.onloadedmetadata=syncHeights; card.appendChild(v); }
+    if(settings.showAnswerHints && obj.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},obj.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; syncHeights(); }; card.append(hb,ht); }
     leftCol.appendChild(card);
   });
 
   sh.forEach(it=>{
     const li=el('li',{}); li.dataset.key=it.key;
-    if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'}));
+    if(it.image){ const img=el('img',{src:it.image,className:'thumb'}); img.onload=syncHeights; li.appendChild(img); }
     if(it.text) li.appendChild(el('div',{},it.text));
-    if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
-    if(it.video) li.appendChild(miniVideo(it.video));
-    if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); }
-    li.draggable=true; addDragHandlers(li,rightCol); rightCol.appendChild(li);
+    if(it.audio){ const a=miniAudio(it.audio,'Play'); a.onloadedmetadata=syncHeights; li.appendChild(a); }
+    if(it.video){ const v=miniVideo(it.video); v.onloadedmetadata=syncHeights; li.appendChild(v); }
+    if(settings.showAnswerHints && it.hint){
+      const hb=el('button',{className:'chip',type:'button'},'💡');
+      const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint);
+      hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; syncHeights(); };
+      li.append(hb,ht);
+    }
+    li.draggable=true; addDragHandlers(li,rightCol,syncHeights);
+    li.addEventListener('dragstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('dragend',()=>{ li.classList.remove('selected'); });
+    li.addEventListener('touchstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('touchend',()=>{ li.classList.remove('selected'); });
+    rightCol.appendChild(li);
     if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
   });
 
   grid.append(leftCol,rightCol); qc.appendChild(grid);
+  syncHeights();
+  window.addEventListener('resize', syncHeights);
   const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
   qctrl.appendChild(s);
+  addKeyHandler(e=>{
+    const items=[...rightCol.children];
+    if(e.key>='1' && e.key<='9'){
+      const idx=parseInt(e.key,10)-1;
+      if(idx<items.length){
+        if(selIndex>=0) items[selIndex].classList.remove('selected');
+        selIndex=idx;
+        items[selIndex].classList.add('selected');
+      }
+    } else if(selIndex>=0 && (e.key==='ArrowUp' || e.key==='ArrowDown')){
+      const target=e.key==='ArrowUp'? selIndex-1 : selIndex+1;
+      if(target>=0 && target<items.length){
+        const cur=items[selIndex];
+        const n=items[target];
+        if(e.key==='ArrowUp') rightCol.insertBefore(cur,n); else rightCol.insertBefore(n,cur);
+        selIndex=target;
+        syncHeights();
+      }
+      e.preventDefault(); e.stopPropagation();
+    } else if(e.key==='Enter'){
+      e.preventDefault(); e.stopPropagation();
+      s.click();
+    }
+  });
 }
 
 function renderPlayOrder(q, qc, qctrl){
   const items=(q.sequence||[]).map((t,i)=> typeof t==='object'? Object.assign({key:String(i)},t) : {text:String(t||''), key:String(i)});
   const sh=shuffle(items.slice());
   const list=el('ul',{className:'sort-list'});
-  sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
+  let selIndex=-1;
+  const clearSel=()=>{
+    if(selIndex>=0){
+      const its=[...list.children];
+      if(its[selIndex]) its[selIndex].classList.remove('selected');
+      selIndex=-1;
+    }
+  };
+  addPointerHandler(e=>{
+    const its=[...list.children];
+    if(selIndex>=0 && its[selIndex] && !its[selIndex].contains(e.target)) clearSel();
+  });
+  sh.forEach(it=>{
+    const li=el('li',{}); li.dataset.key=it.key;
+    if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'}));
+    if(it.text) li.appendChild(el('div',{},it.text));
+    if(it.audio) li.appendChild(miniAudio(it.audio,'Play'));
+    if(it.video) li.appendChild(miniVideo(it.video));
+    if(settings.showAnswerHints && it.hint){
+      const hb=el('button',{className:'chip',type:'button'},'💡');
+      const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint);
+      hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
+      li.append(hb,ht);
+    }
+    li.draggable=true; addDragHandlers(li,list);
+    li.addEventListener('dragstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('dragend',()=>{ li.classList.remove('selected'); });
+    li.addEventListener('touchstart',()=>{ clearSel(); li.classList.add('selected'); });
+    li.addEventListener('touchend',()=>{ li.classList.remove('selected'); });
+    list.appendChild(li);
+    if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text);
+  });
   qc.appendChild(list);
-  const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
+  s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
+  qctrl.appendChild(s);
+  addKeyHandler(e=>{
+    const items=[...list.children];
+    if(e.key>='1' && e.key<='9'){
+      const idx=parseInt(e.key,10)-1;
+      if(idx<items.length){
+        if(selIndex>=0) items[selIndex].classList.remove('selected');
+        selIndex=idx;
+        items[selIndex].classList.add('selected');
+      }
+    } else if(selIndex>=0 && (e.key==='ArrowUp' || e.key==='ArrowDown')){
+      const target=e.key==='ArrowUp'? selIndex-1 : selIndex+1;
+      if(target>=0 && target<items.length){
+        const cur=items[selIndex];
+        const n=items[target];
+        if(e.key==='ArrowUp') list.insertBefore(cur,n); else list.insertBefore(n,cur);
+        selIndex=target;
+      }
+      e.preventDefault(); e.stopPropagation();
+    } else if(e.key==='Enter'){
+      e.preventDefault(); e.stopPropagation();
+      s.click();
+    }
+  });
 }
 
 function renderPlayMultiText(q, qc, qctrl){
   const inputs=[];
-  const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,hint:''}:p);
+  const prompts=(q.prompts&&q.prompts.length?q.prompts:['Answer 1','Answer 2']).map(p=> typeof p==='string'? {text:p,label:'',hint:''}:p);
   let s;
   const check=()=> inputs.every((inp,idx)=> normalizeText(inp.value) === normalizeText(prompts[idx]?.text||''));
   let submitted=false;
   const submit=()=>{ if(submitted) return; submitted=true; inputs.forEach(i=>i.disabled=true); s.disabled=true; proceed(check(), q); };
   prompts.forEach((p,idx)=>{
-    if(p.hint){
+    if(settings.showAnswerHints && p.hint){
       const hb=el('button',{className:'chip',type:'button'},'💡');
       const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},p.hint);
       hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; };
       qc.append(hb,ht);
     }
-    const inp=el('input',{type:'text',placeholder:`Answer ${idx+1}`});
+    const inp=el('input',{type:'text',placeholder:p.label||`Answer ${idx+1}`});
     qc.appendChild(inp);
     inputs.push(inp);
     inp.addEventListener('keydown',e=>{
@@ -1193,14 +1373,15 @@ function renderPlayMultiText(q, qc, qctrl){
 function markSubmit(evalFn, qctrl, q){ const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=> proceed(!!evalFn(), q); qctrl.appendChild(s); }
 
 // Drag helpers
-function addDragHandlers(li, list){
+function addDragHandlers(li, list, onChange){
   li.addEventListener('dragstart',e=>{ li.classList.add('dragging-el'); e.dataTransfer.effectAllowed='move'; });
-  li.addEventListener('dragend',()=> li.classList.remove('dragging-el'));
+  li.addEventListener('dragend',()=>{ li.classList.remove('dragging-el'); if(onChange) onChange(); });
   li.addEventListener('dragover',e=>{
     e.preventDefault();
     const dragging=list.querySelector('.dragging-el'); if(!dragging||dragging===li) return;
     const rect=li.getBoundingClientRect(); const after=(e.clientY-rect.top)>rect.height/2;
     list.insertBefore(dragging, after? li.nextSibling : li);
+    if(onChange) onChange();
   });
   li.addEventListener('touchstart',()=>{ li.classList.add('dragging-el'); });
   li.addEventListener('touchmove',e=>{
@@ -1211,10 +1392,16 @@ function addDragHandlers(li, list){
       const rect=target.getBoundingClientRect();
       const after=(t.clientY-rect.top)>rect.height/2;
       list.insertBefore(dragging, after? target.nextSibling : target);
+      if(onChange) onChange();
     }
     e.preventDefault();
   },{passive:false});
-  li.addEventListener('touchend',()=>{ li.classList.remove('dragging-el'); });
+  li.addEventListener('touchend',()=>{ li.classList.remove('dragging-el'); if(onChange) onChange(); });
+}
+function updateHintInputsVisibility(){
+  document.querySelectorAll('#questionOptionsContainer [data-role="hint"]').forEach(inp=>{
+    inp.style.display = settings.showAnswerHints ? '' : 'none';
+  });
 }
 // --- Overrides: editor with hint fields, collection, and text play ---
 (function(){
@@ -1246,22 +1433,37 @@ function addDragHandlers(li, list){
     row.append(correct,txt,hint,iBtn,aBtn,vBtn,iFile,aFile,vFile,preview,del);
     return row;
   }
-  function buildTextRow(obj){ const o=(typeof obj==='object'&&obj)?obj:{text:obj||'',hint:''}; const r=el('div',{className:'row'}); const i=el('input',{type:'text',value:o.text||'',placeholder:'Text'}); const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(i,h,d); return r; }
+  function buildTextRow(obj, withLabel=false){
+    const o=(typeof obj==='object'&&obj)?obj:{text:obj||'',label:'',hint:''};
+    const r=el('div',{className:'row'});
+    if(withLabel){
+      const lbl=el('input',{type:'text',value:o.label||'',placeholder:'Label (optional)'});
+      r.appendChild(lbl);
+    }
+    const i=el('input',{type:'text',value:o.text||'',placeholder:'Text'});
+    const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'});
+    h.dataset.role='hint';
+    const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+    r.append(i,h,d);
+    return r;
+  }
   function buildPairRow(p){ const r=el('div',{className:'row pair'});
     const leftWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
     const lLabel=el('label',{},'Left');
     const lText=el('input',{type:'text',value:(p.left?.text||p.left||''),placeholder:'Left text'});
     const lHint=el('input',{type:'text',value:(p.left?.hint||''),placeholder:'Left hint (optional)'});
+    lHint.dataset.role='hint';
     const leftRow=el('div',{className:'row'}); leftRow.dataset.img=p.left?.image||''; leftRow.dataset.aud=p.left?.audio||''; leftRow.dataset.vid=p.left?.video||'';
     mediaPickers(leftRow,{image:p.left?.image||'',audio:p.left?.audio||'',video:p.left?.video||''}).forEach(n=>leftRow.appendChild(n)); leftWrap.append(lLabel,lText,lHint,leftRow);
     const rightWrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
     const rLabel=el('label',{},'Right');
     const rText=el('input',{type:'text',value:(p.right?.text||p.right||''),placeholder:'Right text'});
     const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
+    rHint.dataset.role='hint';
     const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||''; rightRow.dataset.vid=p.right?.video||'';
     mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rLabel,rText,rHint,rightRow);
     const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(leftWrap,rightWrap,del); return r; }
-  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
+  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); iHint.dataset.role='hint'; const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
 
   function renderOptionsEditor_v2(data={}){
     const optHost=optHostRef; if(!optHost||!qTypeSelRef) return; optHost.innerHTML='';
@@ -1270,34 +1472,35 @@ function addDragHandlers(li, list){
       const list=el('div',{id:'answersList'});
       const src = (data.answers&&data.answers.length? data.answers : [{text:''},{text:''},{text:''}]);
       src.forEach((ans,i)=> list.appendChild(buildAnswerRow(type, ans, i, data)) );
-      const addBtn = el('button',{className:'btn',onclick:()=> list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data))}, '➕ Add answer');
+      const addBtn = el('button',{className:'btn',onclick:()=>{ list.appendChild(buildAnswerRow(type,{text:''}, list.querySelectorAll('.arow').length, data)); updateHintInputsVisibility(); }}, '➕ Add answer');
       optHost.append(list, addBtn, el('div',{className:'muted'}, type==='single'?'Mark one correct.':'Mark all correct.'));
     }
     if(type==='text'){
       const list=el('div',{id:'txtAccept'});
       const src=(data.acceptable&&data.acceptable.length? data.acceptable : [{text:''}] );
       src.forEach(v=> list.appendChild(buildTextRow(v)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add acceptable');
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildTextRow({text:''})); updateHintInputsVisibility(); }}, '➕ Add acceptable');
       optHost.append(el('div',{className:'muted'},'Answers are compared using the Text Matching settings.'), list, add);
     }
     if(type==='multitext'){
       const list=el('div',{id:'multiPrompts'});
-      (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(buildTextRow(lbl)));
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildTextRow({text:''}))}, '➕ Add field');
+      (data.prompts&&data.prompts.length?data.prompts:[{text:'Answer 1'},{text:'Answer 2'}]).forEach(lbl=> list.appendChild(buildTextRow(lbl,true)));
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildTextRow({text:''},true)); updateHintInputsVisibility(); }}, '➕ Add field');
       optHost.append(el('div',{className:'muted'},'Player must fill all fields.'), list, add);
     }
     if(type==='matching'){
       const wrap=el('div',{id:'pairsWrap'});
       (data.pairs&&data.pairs.length? data.pairs : [{left:{text:''},right:{text:''}}]).forEach(p=> wrap.appendChild(buildPairRow(p)));
-      const add=el('button',{className:'btn',onclick:()=> wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}}))}, '➕ Add pair');
+      const add=el('button',{className:'btn',onclick:()=>{ wrap.appendChild(buildPairRow({left:{text:''},right:{text:''}})); updateHintInputsVisibility(); }}, '➕ Add pair');
       optHost.append(el('div',{className:'muted'},'In play, drag RIGHT to match LEFT. Each side can have text, image, audio, and an optional hint.'), wrap, add);
     }
     if(type==='order'){
       const list=el('div',{id:'orderList'});
       (data.sequence&&data.sequence.length? data.sequence : [{text:''},{text:''}]).forEach(it=> list.appendChild(buildOrderRow(it)) );
-      const add=el('button',{className:'btn',onclick:()=> list.appendChild(buildOrderRow({text:''}))}, '➕ Add item');
+      const add=el('button',{className:'btn',onclick:()=>{ list.appendChild(buildOrderRow({text:''})); updateHintInputsVisibility(); }}, '➕ Add item');
       optHost.append(el('div',{className:'muted'},'The correct order is the editor order. Items can include text, image, audio, and an optional hint.'), list, add);
     }
+    updateHintInputsVisibility();
   }
   window.renderOptionsEditor = renderOptionsEditor_v2;
   function convertQuestionData(prev, newType){
@@ -1339,7 +1542,7 @@ function addDragHandlers(li, list){
   // Override collectQuestion to include hints
   window.collectQuestion = function(){
     const type=qTypeSelRef.value; const question=document.getElementById('questionText').value.trim();
-    const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
+    const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
     const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
     if(type==='single' || type==='multiple'){
       const rows=[...optHostRef.querySelectorAll('#answersList .arow')];
@@ -1360,6 +1563,7 @@ function addDragHandlers(li, list){
     if(type==='multitext'){
       q.prompts=[...optHostRef.querySelectorAll('#multiPrompts .row')].map(r=>({
         text:r.querySelector('input[placeholder="Text"]').value.trim(),
+        label:(r.querySelector('input[placeholder="Label (optional)"]')?.value||'').trim(),
         hint:(r.querySelector('input[placeholder="Hint (optional)"]')?.value||'').trim()
       })).filter(o=>o.text);
     }
@@ -1393,7 +1597,7 @@ function addDragHandlers(li, list){
     inp.focus();
     const acceptable=(q.acceptable||[]).map(a=> typeof a==='string'? {text:a} : a);
     const hintAll=acceptable.map(a=>a.hint).filter(Boolean).join(' · ');
-    if(hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
+    if(settings.showAnswerHints && hintAll){ const hBtn=el('button',{className:'chip',type:'button'},'💡'); const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},hintAll); hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; }; qc.append(hBtn,hTxt); }
     const check=()=>{
       const u=normalizeText(inp.value);
       if(acceptable.some(a=> normalizeText(a.text)===u)) return {ok:true};
