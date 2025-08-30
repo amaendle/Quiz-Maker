@@ -1220,6 +1220,9 @@ function renderPlayMatching(q, qc, qctrl){
   syncHeights();
   window.addEventListener('resize', syncHeights);
   let selIndex=-1;
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
+  s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
+  qctrl.appendChild(s);
   addKeyHandler(e=>{
     const items=[...rightCol.children];
     if(e.key>='1' && e.key<='9'){
@@ -1239,11 +1242,11 @@ function renderPlayMatching(q, qc, qctrl){
         syncHeights();
       }
       e.preventDefault(); e.stopPropagation();
+    } else if(e.key==='Enter'){
+      e.preventDefault(); e.stopPropagation();
+      s.click();
     }
   });
-  const s=el('button',{className:'btn btn-primary'}, t('submit'));
-  s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
-  qctrl.appendChild(s);
 }
 
 function renderPlayOrder(q, qc, qctrl){
@@ -1253,6 +1256,9 @@ function renderPlayOrder(q, qc, qctrl){
   sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(settings.showAnswerHints && it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
   qc.appendChild(list);
   let selIndex=-1;
+  const s=el('button',{className:'btn btn-primary'}, t('submit'));
+  s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
+  qctrl.appendChild(s);
   addKeyHandler(e=>{
     const items=[...list.children];
     if(e.key>='1' && e.key<='9'){
@@ -1271,9 +1277,11 @@ function renderPlayOrder(q, qc, qctrl){
         selIndex=target;
       }
       e.preventDefault(); e.stopPropagation();
+    } else if(e.key==='Enter'){
+      e.preventDefault(); e.stopPropagation();
+      s.click();
     }
   });
-  const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
 function renderPlayMultiText(q, qc, qctrl){
