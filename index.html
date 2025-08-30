@@ -33,6 +33,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .sort-list{list-style:none;padding:0;margin:0}
   .sort-list li{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fafafa;position:relative}
+  .sort-list li.selected{outline:2px solid var(--accent)}
   .opt{display:block;width:100%;text-align:left;margin:6px 0}
   .thumb{max-width:100%;max-height:160px;border-radius:8px;display:block}
   .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
@@ -176,6 +177,7 @@
     <h3 id="playModeHeading">Play mode</h3>
     <label><input type="checkbox" id="showCategory"> <span id="showCategoryLabel">Show category during play</span></label>
     <label><input type="checkbox" id="allowSkip"> <span id="allowSkipLabel">Allow skipping questions</span></label>
+    <label><input type="checkbox" id="singleImmediateSubmit" checked> <span id="singleImmediateSubmitLabel">Immediate submit for single choice</span></label>
 
     <h3 id="experimentalHeading">Experimental features</h3>
     <label><input type="checkbox" id="showAnswerHints"> <span id="showAnswerHintsLabel">Show answer hint buttons</span></label>
@@ -206,6 +208,7 @@ let settings = Object.assign({
   showCorrectImmediate:true,
   showCategory:false,
   allowSkip:false,
+  singleImmediateSubmit:true,
   showAnswerHints:false
 }, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
 if('feedback' in settings){
@@ -296,6 +299,7 @@ function applyLang(){
     'playModeHeading': lang==='de'?'Spielmodus':'Play mode',
     'showCategoryLabel': lang==='de'?'Kategorie während des Spiels anzeigen':'Show category during play',
     'allowSkipLabel': lang==='de'?'überspringen von Fragen erlauben':'Allow skipping questions',
+    'singleImmediateSubmitLabel': lang==='de'?'Sofort senden bei Einzelwahl':'Immediate submit for single choice',
     'catsToggle': lang==='de'?'Kategorien / Themen / Mottos':'Categories / Topics / Mottos',
     'saveSettings': lang==='de'?'Einstellungen speichern':'Save settings',
     'settingsSaved': lang==='de'?'Gespeichert ✓':'Saved ✓',
@@ -811,7 +815,7 @@ function applySettingsToUI(){
   document.getElementById('langSelect').value=settings.lang;
   document.getElementById('randomMode').checked=settings.random; document.getElementById('randomCount').value=settings.randomCount||''; document.getElementById('timeLimitSec').value=settings.timeLimitSec||0;
   document.getElementById('caseSensitive').checked=settings.caseSensitive; document.getElementById('ignorePunct').checked=settings.ignorePunct; document.getElementById('normalizeAccents').checked=settings.normalizeAccents; document.getElementById('ignoreSpaces').checked=settings.ignoreSpaces; document.getElementById('regexFull').checked=settings.regexFull; document.getElementById('mcqScore').value=settings.mcqScore; document.getElementById('autoTTSQuestions').checked=settings.autoTTSQuestions; document.getElementById('autoTTSItems').checked=settings.autoTTSItems; document.getElementById('showCorrectImmediate').checked=settings.showCorrectImmediate;
-  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip; document.getElementById('showAnswerHints').checked=settings.showAnswerHints;
+  document.getElementById('showCategory').checked=settings.showCategory; document.getElementById('allowSkip').checked=settings.allowSkip; document.getElementById('singleImmediateSubmit').checked=settings.singleImmediateSubmit; document.getElementById('showAnswerHints').checked=settings.showAnswerHints;
   renderCategorySelect();
   renderCategoriesManager();
   applyLang();
@@ -857,6 +861,7 @@ document.getElementById('saveSettings').onclick=()=>{
   settings.showCorrectImmediate=document.getElementById('showCorrectImmediate').checked;
   settings.showCategory=document.getElementById('showCategory').checked;
   settings.allowSkip=document.getElementById('allowSkip').checked;
+  settings.singleImmediateSubmit=document.getElementById('singleImmediateSubmit').checked;
   settings.showAnswerHints=document.getElementById('showAnswerHints').checked;
   document.documentElement.lang = settings.lang || 'en';
   applyLang();
@@ -1047,50 +1052,61 @@ function describeCorrect(q){
 // ===== Play renderers + validation =====
 function renderPlaySingle(q, qc, qctrl){
   q.answers = (q.answers||[]);
-  const btns=[];
-  let chosen=-1;
-  let submitted=false;
-  const submit=()=>{
-    if(submitted) return;
-    submitted=true;
-    btns.forEach(b=>b.disabled=true);
-    proceed(chosen===q.correct, q);
-  };
-  let submitBtn=null;
-  q.answers.forEach((a,i)=>{
-    const b = el('button',{className:'btn opt'});
-    const box = el('div',{});
-    if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
-    if(a.text) box.appendChild(el('div',{}, a.text));
-    if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
-    if(a.video) box.appendChild(miniVideo(a.video));
-    if(settings.showAnswerHints && a.hint){
-      const hintBtn = el('button',{className:'chip',type:'button'},'💡');
-      const hintText = el('span',{className:'muted',style:'display:none;margin-left:6px'}, a.hint);
-      hintBtn.onclick = ()=>{ hintText.style.display = (hintText.style.display==='none'?'inline':'none'); };
-      box.appendChild(hintBtn);
-      box.appendChild(hintText);
-    }
-    b.appendChild(box);
-    b.onclick = ()=>{
-      if(submitted) return;
-      if(settings.autoTTSItems && a.text) speak(a.text);
-      chosen=i;
-      if(settings.autoValidate){
-        submit();
-      }else{
-        btns.forEach(btn=>btn.classList.remove('selected'));
-        b.classList.add('selected');
-        if(!submitBtn){
-          submitBtn=el('button',{className:'btn btn-primary'}, t('submit'));
-          submitBtn.onclick=submit;
-          qctrl.appendChild(submitBtn);
-        }
+  if(settings.singleImmediateSubmit){
+    const btns=[];
+    q.answers.forEach((a,i)=>{
+      const b=el('button',{className:'btn opt'});
+      const box=el('div',{});
+      if(a.image) box.appendChild(el('img',{src:a.image,className:'thumb'}));
+      if(a.text) box.appendChild(el('div',{},a.text));
+      if(a.audio) box.appendChild(miniAudio(a.audio,'Play'));
+      if(a.video) box.appendChild(miniVideo(a.video));
+      if(settings.showAnswerHints && a.hint){
+        const hintBtn=el('button',{className:'chip',type:'button'},'💡');
+        const hintText=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint);
+        hintBtn.onclick=()=>{ hintText.style.display=hintText.style.display==='none'?'inline':'none'; };
+        box.append(hintBtn,hintText);
       }
-    };
-    qc.appendChild(b); btns.push(b);
-  });
-  addKeyHandler(e=>{ const idx=parseInt(e.key,10)-1; if(idx>=0 && idx<btns.length) btns[idx].click(); });
+      b.appendChild(box);
+      b.onclick=()=>{
+        if(settings.autoTTSItems && a.text) speak(a.text);
+        btns.forEach(btn=>btn.disabled=true);
+        proceed(i===q.correct,q);
+      };
+      qc.appendChild(b); btns.push(b);
+    });
+    addKeyHandler(e=>{ const idx=parseInt(e.key,10)-1; if(idx>=0 && idx<btns.length) btns[idx].click(); });
+  } else {
+    const radios=[];
+    q.answers.forEach((a,i)=>{
+      const wrap=el('label',{});
+      const r=el('input',{type:'radio',name:'scq'});
+      wrap.appendChild(r);
+      if(a.text) wrap.appendChild(el('span',{},' ',a.text));
+      if(a.image) wrap.appendChild(el('img',{src:a.image,className:'thumb'}));
+      if(a.audio) wrap.appendChild(miniAudio(a.audio,'Play'));
+      if(a.video) wrap.appendChild(miniVideo(a.video));
+      if(settings.showAnswerHints && a.hint){
+        const hBtn=el('button',{className:'chip',type:'button'},'💡');
+        const hTxt=el('span',{className:'muted',style:'display:none;margin-left:6px'},a.hint);
+        hBtn.onclick=()=>{ hTxt.style.display=hTxt.style.display==='none'?'inline':'none'; };
+        wrap.append(hBtn,hTxt);
+      }
+      if(settings.autoTTSItems && a.text) wrap.onclick=()=>speak(a.text);
+      qc.appendChild(wrap);
+      radios.push(r);
+    });
+    const s=el('button',{className:'btn btn-primary'}, t('submit'));
+    s.onclick=()=>{ const chosen=radios.findIndex(r=>r.checked); proceed(chosen===q.correct,q); };
+    qctrl.appendChild(s);
+    addKeyHandler(e=>{
+      if(e.key>='1' && e.key<='9'){
+        const idx=parseInt(e.key,10)-1; if(radios[idx]) radios[idx].checked=true;
+      } else if(e.key==='Enter'){
+        e.preventDefault(); e.stopPropagation(); s.click();
+      }
+    });
+  }
 }
 
 function renderPlayMultiple(q, qc, qctrl){
@@ -1203,6 +1219,28 @@ function renderPlayMatching(q, qc, qctrl){
   grid.append(leftCol,rightCol); qc.appendChild(grid);
   syncHeights();
   window.addEventListener('resize', syncHeights);
+  let selIndex=-1;
+  addKeyHandler(e=>{
+    const items=[...rightCol.children];
+    if(e.key>='1' && e.key<='9'){
+      const idx=parseInt(e.key,10)-1;
+      if(idx<items.length){
+        if(selIndex>=0) items[selIndex].classList.remove('selected');
+        selIndex=idx;
+        items[selIndex].classList.add('selected');
+      }
+    } else if(selIndex>=0 && (e.key==='ArrowUp' || e.key==='ArrowDown')){
+      const target=e.key==='ArrowUp'? selIndex-1 : selIndex+1;
+      if(target>=0 && target<items.length){
+        const cur=items[selIndex];
+        const n=items[target];
+        if(e.key==='ArrowUp') rightCol.insertBefore(cur,n); else rightCol.insertBefore(n,cur);
+        selIndex=target;
+        syncHeights();
+      }
+      e.preventDefault(); e.stopPropagation();
+    }
+  });
   const s=el('button',{className:'btn btn-primary'}, t('submit'));
   s.onclick=()=>{ const order=[...rightCol.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); };
   qctrl.appendChild(s);
@@ -1214,6 +1252,27 @@ function renderPlayOrder(q, qc, qctrl){
   const list=el('ul',{className:'sort-list'});
   sh.forEach(it=>{ const li=el('li',{}); li.dataset.key=it.key; if(it.image) li.appendChild(el('img',{src:it.image,className:'thumb'})); if(it.text) li.appendChild(el('div',{},it.text)); if(it.audio) li.appendChild(miniAudio(it.audio,'Play')); if(it.video) li.appendChild(miniVideo(it.video)); if(settings.showAnswerHints && it.hint){ const hb=el('button',{className:'chip',type:'button'},'💡'); const ht=el('span',{className:'muted',style:'display:none;margin-left:6px'},it.hint); hb.onclick=()=>{ ht.style.display=ht.style.display==='none'?'inline':'none'; }; li.append(hb,ht); } li.draggable=true; addDragHandlers(li,list); list.appendChild(li); if(settings.autoTTSItems && it.text) li.onclick=()=>speak(it.text); });
   qc.appendChild(list);
+  let selIndex=-1;
+  addKeyHandler(e=>{
+    const items=[...list.children];
+    if(e.key>='1' && e.key<='9'){
+      const idx=parseInt(e.key,10)-1;
+      if(idx<items.length){
+        if(selIndex>=0) items[selIndex].classList.remove('selected');
+        selIndex=idx;
+        items[selIndex].classList.add('selected');
+      }
+    } else if(selIndex>=0 && (e.key==='ArrowUp' || e.key==='ArrowDown')){
+      const target=e.key==='ArrowUp'? selIndex-1 : selIndex+1;
+      if(target>=0 && target<items.length){
+        const cur=items[selIndex];
+        const n=items[target];
+        if(e.key==='ArrowUp') list.insertBefore(cur,n); else list.insertBefore(n,cur);
+        selIndex=target;
+      }
+      e.preventDefault(); e.stopPropagation();
+    }
+  });
   const s=el('button',{className:'btn btn-primary'}, t('submit')); s.onclick=()=>{ const order=[...list.children].map(li=>li.dataset.key); const ok=order.every((v,i)=> v===String(i)); proceed(ok,q); }; qctrl.appendChild(s);
 }
 
