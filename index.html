@@ -568,7 +568,7 @@ function answerRow(type, valueObj={}, idx, data){
   const mediaRow=el('span',{}); mediaPickers(mediaRow,{image:valueObj.image||'',audio:valueObj.audio||'',video:valueObj.video||''}).forEach(n=>mediaRow.appendChild(n));
   const wrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
   wrap.append(txt,hint,mediaRow);
-  const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
+  const del=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>row.remove()},'🗑️');
   row.append(correct,wrap,del);
   return row;
 }
@@ -581,7 +581,7 @@ function textRow(value){
   }
   const i=el('input',{type:'text',value:obj.text||'',placeholder:'Text',style:'flex:1;width:auto'});
   const h=el('input',{type:'text',value:obj.hint||'',placeholder:'Hint (optional)'});
-  const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+  const d=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️');
   r.append(i,h,d);
   return r;
 }
@@ -598,11 +598,11 @@ function pairRow(p){ const r=el('div',{className:'row pair'});
   const rHint=el('input',{type:'text',value:(p.right?.hint||''),placeholder:'Right hint (optional)'});
   const rMedia=el('span',{}); mediaPickers(rMedia,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rMedia.appendChild(n));
   right.append(rText,rHint,rMedia);
-  const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+  const del=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️');
   r.append(left,right,del);
   return r;
 }
-function orderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const m=el('span',{}); mediaPickers(m,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>m.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,m,d); return r; }
+function orderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); const m=el('span',{}); mediaPickers(m,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>m.appendChild(n)); const d=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️'); r.append(iText,iHint,m,d); return r; }
 
 function renderOptionsEditor(data={}){
   if(!optHost||!qTypeSel) return; optHost.innerHTML='';
@@ -1467,7 +1467,7 @@ function updateHintInputsVisibility(){
     vFile.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; const d=await fileToDataURL(f); row.dataset.vid=d; const old=preview.querySelector('video'); if(old) old.remove(); preview.appendChild(miniVideo(d)); };
     const wrap=el('div',{className:'row',style:'flex:1;align-items:flex-start'});
     wrap.append(txt,hint,iBtn,aBtn,vBtn,iFile,aFile,vFile,preview);
-    const del=el('button',{className:'btn btn-ghost',onclick:()=>row.remove()},'Remove');
+    const del=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>row.remove()},'🗑️');
     row.append(correct,wrap,del);
     return row;
   }
@@ -1481,7 +1481,7 @@ function updateHintInputsVisibility(){
     const i=el('input',{type:'text',value:o.text||'',placeholder:'Text',style:'flex:1;width:auto'});
     const h=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'});
     h.dataset.role='hint';
-    const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove');
+    const d=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️');
     r.append(i,h,d);
     return r;
   }
@@ -1498,8 +1498,8 @@ function updateHintInputsVisibility(){
     rHint.dataset.role='hint';
     const rightRow=el('div',{className:'row'}); rightRow.dataset.img=p.right?.image||''; rightRow.dataset.aud=p.right?.audio||''; rightRow.dataset.vid=p.right?.video||'';
     mediaPickers(rightRow,{image:p.right?.image||'',audio:p.right?.audio||'',video:p.right?.video||''}).forEach(n=>rightRow.appendChild(n)); rightWrap.append(rText,rHint,rightRow);
-    const del=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(leftWrap,rightWrap,del); return r; }
-  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); iHint.dataset.role='hint'; const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',onclick:()=>r.remove()},'Remove'); r.append(iText,iHint,mediaRow,d); return r; }
+    const del=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️'); r.append(leftWrap,rightWrap,del); return r; }
+  function buildOrderRow(it){ const o=(typeof it==='object'&&it)?it:{text:String(it||''),image:'',audio:'',hint:'',video:''}; const r=el('div',{className:'row order-row'}); const iText=el('input',{type:'text',value:o.text||'',placeholder:'Item text'}); const iHint=el('input',{type:'text',value:o.hint||'',placeholder:'Hint (optional)'}); iHint.dataset.role='hint'; const mediaRow=el('div',{className:'row'}); mediaRow.dataset.img=o.image||''; mediaRow.dataset.aud=o.audio||''; mediaRow.dataset.vid=o.video||''; mediaPickers(mediaRow,{image:o.image||'',audio:o.audio||'',video:o.video||''}).forEach(n=>mediaRow.appendChild(n)); const d=el('button',{className:'btn btn-ghost',title:settings.lang==='de'?'Entfernen':'Remove',onclick:()=>r.remove()},'🗑️'); r.append(iText,iHint,mediaRow,d); return r; }
 
   function renderOptionsEditor_v2(data={}){
     const optHost=optHostRef; if(!optHost||!qTypeSelRef) return; optHost.innerHTML='';
