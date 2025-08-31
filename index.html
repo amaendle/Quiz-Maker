@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2e7d32" />
 <title>Quiz Maker — full build (fixed)</title>
 <style>
   :root{--bg:#f4faff;--card:#fff;--ink:#163046;--muted:#5e7180;--line:#d6e2ea;--accent:#2e7d32}
@@ -486,6 +488,7 @@ function showNewCategoryUI(){
     saveMeta();
 
     renderCategorySelect();
+    renderCategoriesManager();
     sel.value = id; // select the new one
     ui.style.display = 'none';
     ui.innerHTML = '';
@@ -1672,6 +1675,13 @@ function updateHintInputsVisibility(){
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); submit(); } });
   };
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
 </script>
 </body>
 </html>
