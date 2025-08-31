@@ -195,8 +195,16 @@
 
 <script>
 // ===== State =====
-let questions = JSON.parse(localStorage.getItem('quizData')||'[]');
-let meta = Object.assign({ categories: [] }, JSON.parse(localStorage.getItem('quizMeta') || '{}'));
+function safeParse(key, fallback){
+  try{
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  }catch(e){
+    return fallback;
+  }
+}
+let questions = safeParse('quizData', []);
+let meta = Object.assign({ categories: [] }, safeParse('quizMeta', {}));
 meta.categories = (meta.categories || []).map(c=> ({id:c.id, label:(c.label||c.labels?.en||c.labels?.de||c.id), comment:c.comment||c.hint||''}));
 function saveMeta(){ localStorage.setItem('quizMeta', JSON.stringify(meta)); }
 let settings = Object.assign({
@@ -214,7 +222,7 @@ let settings = Object.assign({
   allowSkip:false,
   singleImmediateSubmit:true,
   showAnswerHints:false
-}, JSON.parse(localStorage.getItem('quizSettings')||'{}'));
+}, safeParse('quizSettings', {}));
 if('feedback' in settings){
   settings.feedbackImmediate = settings.feedback === 'immediate';
   settings.feedbackEnd = settings.feedback === 'end';
