@@ -388,31 +388,40 @@ function miniVideo(url){ const v=document.createElement('video'); v.src=url; v.c
 function linkifyText(str){ const url=/https?:\/\/[^\s]+/g; const frag=document.createDocumentFragment(); let last=0; str=String(str||''); let m; while((m=url.exec(str))){ if(m.index>last) frag.appendChild(document.createTextNode(str.slice(last,m.index))); const a=document.createElement('a'); a.href=m[0]; a.target='_blank'; a.textContent=m[0]; frag.appendChild(a); last=m.index+m[0].length; } if(last<str.length) frag.appendChild(document.createTextNode(str.slice(last))); return frag; }
 
 // ===== Media pickers (question/comment) =====
-let qImgData='', qAudData='', qVidData='', cImgData='', cAudData='', cVidData='';
-const qImg=document.getElementById('qImg'), qImgPick=document.getElementById('qImgPick'), qImgPrev=document.getElementById('qImgPrev'), qImgClear=document.getElementById('qImgClear');
-qImgPick.onclick=()=>qImg.click();
-qImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qImgData=await fileToDataURL(f); qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; };
-qImgClear.onclick=()=>{ qImg.value=''; qImgData=''; qImgPrev.style.display='none'; qImgClear.style.display='none'; };
-const qAud=document.getElementById('qAud'), qAudPick=document.getElementById('qAudPick'), qAudMini=document.getElementById('qAudMini'), qAudClear=document.getElementById('qAudClear');
-qAudPick.onclick=()=>qAud.click();
-qAud.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qAudData=await fileToDataURL(f); qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; };
-qAudClear.onclick=()=>{ qAud.value=''; qAudData=''; qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; };
-const qVid=document.getElementById('qVid'), qVidPick=document.getElementById('qVidPick'), qVidMini=document.getElementById('qVidMini'), qVidClear=document.getElementById('qVidClear');
-qVidPick.onclick=()=>qVid.click();
-qVid.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; qVidData=await fileToDataURL(f); qVidMini.innerHTML=''; qVidMini.appendChild(miniVideo(qVidData)); qVidMini.style.display='inline-flex'; qVidClear.style.display='inline-block'; };
-qVidClear.onclick=()=>{ qVid.value=''; qVidData=''; qVidMini.innerHTML=''; qVidMini.style.display='none'; qVidClear.style.display='none'; };
-const cImg=document.getElementById('cImg'), cImgPick=document.getElementById('cImgPick'), cImgPrev=document.getElementById('cImgPrev'), cImgClear=document.getElementById('cImgClear');
-cImgPick.onclick=()=>cImg.click();
-cImg.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cImgData=await fileToDataURL(f); cImgPrev.src=cImgData; cImgPrev.style.display='block'; cImgClear.style.display='inline-block'; };
-cImgClear.onclick=()=>{ cImg.value=''; cImgData=''; cImgPrev.style.display='none'; cImgClear.style.display='none'; };
-const cAud=document.getElementById('cAud'), cAudPick=document.getElementById('cAudPick'), cAudMini=document.getElementById('cAudMini'), cAudClear=document.getElementById('cAudClear');
-cAudPick.onclick=()=>cAud.click();
-cAud.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cAudData=await fileToDataURL(f); cAudMini.innerHTML=''; cAudMini.appendChild(miniAudio(cAudData,'Audio')); cAudMini.style.display='inline-flex'; cAudClear.style.display='inline-block'; };
-cAudClear.onclick=()=>{ cAud.value=''; cAudData=''; cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; };
-const cVid=document.getElementById('cVid'), cVidPick=document.getElementById('cVidPick'), cVidMini=document.getElementById('cVidMini'), cVidClear=document.getElementById('cVidClear');
-cVidPick.onclick=()=>cVid.click();
-cVid.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; cVidData=await fileToDataURL(f); cVidMini.innerHTML=''; cVidMini.appendChild(miniVideo(cVidData)); cVidMini.style.display='inline-flex'; cVidClear.style.display='inline-block'; };
-cVidClear.onclick=()=>{ cVid.value=''; cVidData=''; cVidMini.innerHTML=''; cVidMini.style.display='none'; cVidClear.style.display='none'; };
+function initMediaPicker(prefix){
+  const state={img:'',aud:'',vid:''};
+  const img=document.getElementById(prefix+'Img'),
+        imgPick=document.getElementById(prefix+'ImgPick'),
+        imgPrev=document.getElementById(prefix+'ImgPrev'),
+        imgClear=document.getElementById(prefix+'ImgClear');
+  const aud=document.getElementById(prefix+'Aud'),
+        audPick=document.getElementById(prefix+'AudPick'),
+        audMini=document.getElementById(prefix+'AudMini'),
+        audClear=document.getElementById(prefix+'AudClear');
+  const vid=document.getElementById(prefix+'Vid'),
+        vidPick=document.getElementById(prefix+'VidPick'),
+        vidMini=document.getElementById(prefix+'VidMini'),
+        vidClear=document.getElementById(prefix+'VidClear');
+  imgPick.onclick=()=>img.click();
+  img.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; state.img=await fileToDataURL(f); imgPrev.src=state.img; imgPrev.style.display='block'; imgClear.style.display='inline-block'; };
+  imgClear.onclick=()=>{ img.value=''; state.img=''; imgPrev.style.display='none'; imgClear.style.display='none'; };
+  audPick.onclick=()=>aud.click();
+  aud.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; state.aud=await fileToDataURL(f); audMini.innerHTML=''; audMini.appendChild(miniAudio(state.aud,'Audio')); audMini.style.display='inline-flex'; audClear.style.display='inline-block'; };
+  audClear.onclick=()=>{ aud.value=''; state.aud=''; audMini.innerHTML=''; audMini.style.display='none'; audClear.style.display='none'; };
+  vidPick.onclick=()=>vid.click();
+  vid.onchange=async e=>{ const f=e.target.files?.[0]; if(!f) return; state.vid=await fileToDataURL(f); vidMini.innerHTML=''; vidMini.appendChild(miniVideo(state.vid)); vidMini.style.display='inline-flex'; vidClear.style.display='inline-block'; };
+  vidClear.onclick=()=>{ vid.value=''; state.vid=''; vidMini.innerHTML=''; vidMini.style.display='none'; vidClear.style.display='none'; };
+  function load(media){
+    state.img=media.image||''; state.aud=media.audio||''; state.vid=media.video||'';
+    if(state.img){ imgPrev.src=state.img; imgPrev.style.display='block'; imgClear.style.display='inline-block'; } else { imgPrev.style.display='none'; imgClear.style.display='none'; }
+    if(state.aud){ audMini.innerHTML=''; audMini.appendChild(miniAudio(state.aud,'Audio')); audMini.style.display='inline-flex'; audClear.style.display='inline-block'; } else { audMini.innerHTML=''; audMini.style.display='none'; audClear.style.display='none'; }
+    if(state.vid){ vidMini.innerHTML=''; vidMini.appendChild(miniVideo(state.vid)); vidMini.style.display='inline-flex'; vidClear.style.display='inline-block'; } else { vidMini.innerHTML=''; vidMini.style.display='none'; vidClear.style.display='none'; }
+  }
+  function reset(){ img.value=''; aud.value=''; vid.value=''; load({}); }
+  return {state, load, reset};
+}
+const qMedia=initMediaPicker('q');
+const cMedia=initMediaPicker('c');
 
 // ===== Editor renderers =====
 const optHost = document.getElementById('questionOptionsContainer');
@@ -654,7 +663,7 @@ renderOptionsEditor();
 // Gather editor data
 function collectQuestion(){
   const type=qTypeSel.value; const question=document.getElementById('questionText').value.trim();
-  const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
+  const q={type, question, questionMedia:{image:qMedia.state.img||'', audio:qMedia.state.aud||'', video:qMedia.state.vid||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cMedia.state.img||'', audio:cMedia.state.aud||'', video:cMedia.state.vid||''}};
   const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
   if(type==='single' || type==='multiple'){
     const rows=[...optHost.querySelectorAll('#answersList .arow')];
@@ -699,13 +708,8 @@ function loadIntoEditor(q){
   document.getElementById('questionText').value=q.question||'';
   document.getElementById('questionHint').value=q.hint||'';
   document.getElementById('questionComment').value=q.comment||'';
-  qImgData=q.questionMedia?.image||''; qAudData=q.questionMedia?.audio||''; qVidData=q.questionMedia?.video||''; cImgData=q.commentMedia?.image||''; cAudData=q.commentMedia?.audio||''; cVidData=q.commentMedia?.video||'';
-  if(qImgData){ qImgPrev.src=qImgData; qImgPrev.style.display='block'; qImgClear.style.display='inline-block'; } else { qImgPrev.style.display='none'; qImgClear.style.display='none'; }
-  if(qAudData){ qAudMini.innerHTML=''; qAudMini.appendChild(miniAudio(qAudData,'Audio')); qAudMini.style.display='inline-flex'; qAudClear.style.display='inline-block'; } else { qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none'; }
-  if(qVidData){ qVidMini.innerHTML=""; qVidMini.appendChild(miniVideo(qVidData)); qVidMini.style.display="inline-flex"; qVidClear.style.display="inline-block"; } else { qVidMini.innerHTML=""; qVidMini.style.display="none"; qVidClear.style.display="none"; }
-  if(cImgData){ cImgPrev.src=cImgData; cImgPrev.style.display='block'; cImgClear.style.display='inline-block'; } else { cImgPrev.style.display='none'; cImgClear.style.display='none'; }
-  if(cAudData){ cAudMini.innerHTML=''; cAudMini.appendChild(miniAudio(cAudData,'Audio')); cAudMini.style.display='inline-flex'; cAudClear.style.display='inline-block'; } else { cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none'; }
-  if(cVidData){ cVidMini.innerHTML=""; cVidMini.appendChild(miniVideo(cVidData)); cVidMini.style.display="inline-flex"; cVidClear.style.display="inline-block"; } else { cVidMini.innerHTML=""; cVidMini.style.display="none"; cVidClear.style.display="none"; }
+  qMedia.load(q.questionMedia||{});
+  cMedia.load(q.commentMedia||{});
   qTypeSel.value=q.type||'single'; renderOptionsEditor(q);
   renderCategorySelect(); if(q.categoryId){ const sel=document.getElementById('categorySelect'); if(sel) sel.value=q.categoryId; }
 }
@@ -714,14 +718,8 @@ function clearEditorFields(){
   document.getElementById('questionText').value='';
   document.getElementById('questionHint').value='';
   document.getElementById('questionComment').value='';
-  qImg.value=''; qAud.value=''; qVid.value=''; cImg.value=''; cAud.value=''; cVid.value='';
-  qImgData=qAudData=qVidData=cImgData=cAudData=cVidData='';
-  qImgPrev.style.display='none'; qImgClear.style.display='none';
-  qAudMini.innerHTML=''; qAudMini.style.display='none'; qAudClear.style.display='none';
-  qVidMini.innerHTML=''; qVidMini.style.display='none'; qVidClear.style.display='none';
-  cImgPrev.style.display='none'; cImgClear.style.display='none';
-  cAudMini.innerHTML=''; cAudMini.style.display='none'; cAudClear.style.display='none';
-  cVidMini.innerHTML=''; cVidMini.style.display='none'; cVidClear.style.display='none';
+  qMedia.reset();
+  cMedia.reset();
   const sel=document.getElementById('categorySelect'); if(sel) sel.value='';
   qTypeSel.value='single';
   renderOptionsEditor();
@@ -1590,7 +1588,7 @@ function updateHintInputsVisibility(){
   // Override collectQuestion to include hints
   window.collectQuestion = function(){
     const type=qTypeSelRef.value; const question=document.getElementById('questionText').value.trim();
-    const q={type, question, questionMedia:{image:qImgData||'', audio:qAudData||'', video:qVidData||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cImgData||'', audio:cAudData||'', video:cVidData||''}};
+    const q={type, question, questionMedia:{image:qMedia.state.img||'', audio:qMedia.state.aud||'', video:qMedia.state.vid||''}, hint:(document.getElementById('questionHint').value||'').trim(), comment:(document.getElementById('questionComment').value||'').trim(), commentMedia:{image:cMedia.state.img||'', audio:cMedia.state.aud||'', video:cMedia.state.vid||''}};
     const catSel=document.getElementById('categorySelect'); if(catSel && catSel.value) q.categoryId=catSel.value;
     if(type==='single' || type==='multiple'){
       const rows=[...optHostRef.querySelectorAll('#answersList .arow')];
