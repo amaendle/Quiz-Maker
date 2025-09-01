@@ -196,10 +196,11 @@
 <script>
 // ===== State =====
 function safeParse(key, fallback){
-  try{
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
-  }catch(e){
+  const raw = localStorage.getItem(key);
+  if(raw == null) return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch(e) {
     return fallback;
   }
 }
